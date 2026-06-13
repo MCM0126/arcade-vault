@@ -8,21 +8,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Arcade Vault is an online gaming platform where users play and compete for the highest scores. Development follows **Spec Driven Design** using `/spec` and `/spec-impl` skills from [Klerith/fernando-skills](https://github.com/Klerith/fernando-skills).
 
-## Commands
-
-```bash
-npm run dev      # Start dev server (Turbopack, outputs to .next/dev)
-npm run build    # Production build (Turbopack)
-npm run start    # Start production server
-npm run lint     # Run ESLint (uses eslint CLI directly, not next lint)
-```
-
 ## Stack
 
 - **Next.js 16** — App Router only; no Pages Router
 - **React 19.2** — View Transitions, `useEffectEvent`, React Compiler (opt-in via `reactCompiler: true` in `next.config.ts`)
 - **TypeScript** — strict mode, path alias `@/*` → project root
 - **Tailwind CSS v4** — configured via `@theme` in CSS, not `tailwind.config.js`; import with `@import "tailwindcss"`
+
+# Skills
+usa siempre /forntend-design para disenar la interfaz del usuario
 
 ## Next.js 16 Breaking Changes
 
