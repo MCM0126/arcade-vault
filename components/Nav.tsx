@@ -33,6 +33,7 @@ export default function Nav() {
     if (section === 'inicio') return pathname === '/'
     if (section === 'biblioteca') return pathname.startsWith('/games')
     if (section === 'salon') return pathname === '/hall-of-fame'
+    if (section === 'about') return pathname === '/about'
     return false
   }
 
@@ -60,6 +61,9 @@ export default function Nav() {
           </Link>
           <Link href="/hall-of-fame" className={isActive('salon') ? 'active' : ''}>
             Salón de la Fama
+          </Link>
+          <Link href="/about" className={isActive('about') ? 'active' : ''}>
+            Sobre nosotros
           </Link>
         </div>
 
@@ -117,6 +121,13 @@ export default function Nav() {
           onClick={() => go('/hall-of-fame')}
         >
           Salón de la Fama
+        </a>
+        <a
+          className={isActive('about') ? 'active' : ''}
+          style={{ cursor: 'pointer' }}
+          onClick={() => go('/about')}
+        >
+          Sobre nosotros
         </a>
         <a style={{ cursor: 'pointer' }} onClick={() => go('/auth')}>
           {user ? 'Cuenta' : 'Iniciar Sesión'}
