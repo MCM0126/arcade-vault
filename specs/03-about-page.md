@@ -1,6 +1,6 @@
 # 03-about-page
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Dependencias:** 02-home-page (requiere Nav.tsx y globals.css existentes)
 **Fecha:** 2026-06-13
 **Objetivo:** Implementar la página /about con secciones "Acerca de" y formulario de contacto que envía correos vía Resend.
