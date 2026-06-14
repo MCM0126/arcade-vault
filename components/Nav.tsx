@@ -30,7 +30,8 @@ export default function Nav() {
   }
 
   const isActive = (section: string) => {
-    if (section === 'biblioteca') return pathname === '/' || pathname.startsWith('/games')
+    if (section === 'inicio') return pathname === '/'
+    if (section === 'biblioteca') return pathname.startsWith('/games')
     if (section === 'salon') return pathname === '/hall-of-fame'
     return false
   }
@@ -51,7 +52,10 @@ export default function Nav() {
         </div>
 
         <div className="links">
-          <Link href="/" className={isActive('biblioteca') ? 'active' : ''}>
+          <Link href="/" className={isActive('inicio') ? 'active' : ''}>
+            Inicio
+          </Link>
+          <Link href="/games" className={isActive('biblioteca') ? 'active' : ''}>
             Biblioteca
           </Link>
           <Link href="/hall-of-fame" className={isActive('salon') ? 'active' : ''}>
@@ -94,9 +98,16 @@ export default function Nav() {
           MENÚ
         </div>
         <a
-          className={isActive('biblioteca') ? 'active' : ''}
+          className={isActive('inicio') ? 'active' : ''}
           style={{ cursor: 'pointer' }}
           onClick={() => go('/')}
+        >
+          Inicio
+        </a>
+        <a
+          className={isActive('biblioteca') ? 'active' : ''}
+          style={{ cursor: 'pointer' }}
+          onClick={() => go('/games')}
         >
           Biblioteca
         </a>
