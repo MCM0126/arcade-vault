@@ -1,6 +1,6 @@
 # 07-catalog-supabase
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Dependencias:** 04-supabase-setup, 05-asteroides-integration, 06-leaderboard
 **Fecha:** 2026-06-15
 **Objetivo:** Migrar el catálogo de juegos de `lib/data.ts` a una tabla Supabase,
