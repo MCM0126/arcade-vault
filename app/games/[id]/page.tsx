@@ -1,23 +1,28 @@
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { GAMES, seededScores } from '@/lib/data'
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getGame } from "@/lib/supabase/games";
+import { getGameTop10, getGameStats } from "@/lib/supabase/scores";
 
 interface Props {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 export default async function GameDetailPage({ params }: Props) {
-  const { id } = await params
-  const game = GAMES.find((g) => g.id === id)
-  if (!game) notFound()
+  const { id } = await params;
 
-  const scores = seededScores(id.length * 17 + 3, 10)
+  const [game, scores, stats] = await Promise.all([
+    getGame(id),
+    getGameTop10(id),
+    getGameStats(id),
+  ]);
+
+  if (!game) notFound();
 
   return (
     <div className="av-detail fade-in">
       <div>
         <div className="detail-cover">
-          <div className={'cover-bg ' + game.cover} />
+          <div className={"cover-bg " + game.cover} />
         </div>
 
         <div className="detail-info" style={{ marginTop: 20 }}>
@@ -29,27 +34,35 @@ export default async function GameDetailPage({ params }: Props) {
           </div>
 
           <h2 className="neon-cyan">{game.title}</h2>
-          <p>{game.long}</p>
+          <p>{game.long_desc}</p>
 
           <div className="stat-strip">
             <div>
               <div className="l">Partidas</div>
-              <div className="v">{game.plays}</div>
+              <div className="v">
+                {stats.total_plays.toLocaleString("es-ES")}
+              </div>
             </div>
             <div>
               <div className="l">Mejor global</div>
               <div
                 className="v"
-                style={{ color: 'var(--magenta)', textShadow: '0 0 6px rgba(255,0,110,0.5)' }}
+                style={{
+                  color: "var(--magenta)",
+                  textShadow: "0 0 6px rgba(255,0,110,0.5)",
+                }}
               >
-                {game.best.toLocaleString('es-ES')}
+                {stats.best_score.toLocaleString("es-ES")}
               </div>
             </div>
             <div>
               <div className="l">Dificultad</div>
               <div
                 className="v"
-                style={{ color: 'var(--yellow)', textShadow: '0 0 6px rgba(245,255,0,0.5)' }}
+                style={{
+                  color: "var(--yellow)",
+                  textShadow: "0 0 6px rgba(245,255,0,0.5)",
+                }}
               >
                 ★ ★ ★ ☆ ☆
               </div>
@@ -70,26 +83,42 @@ export default async function GameDetailPage({ params }: Props) {
       <aside>
         <div className="leaderboard">
           <h3>MEJORES PUNTUACIONES</h3>
-          {scores.map((r, i) => (
+          {scores.length === 0 ? (
             <div
-              key={r.name}
-              className={
-                'lb-row' +
-                (i === 0 ? ' top1' : i === 1 ? ' top2' : i === 2 ? ' top3' : '')
-              }
+              className="pixel"
+              style={{
+                color: "var(--ink-faint)",
+                fontSize: 11,
+                letterSpacing: "0.15em",
+                paddingTop: 24,
+                textAlign: "center",
+              }}
             >
-              <div className="rk">#{String(r.rank).padStart(2, '0')}</div>
-              <div className="pl">
-                {r.name}
-                <div style={{ fontSize: 10, color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>
-                  {r.date}
-                </div>
-              </div>
-              <div className="sc">{r.score.toLocaleString('es-ES')}</div>
+              SIN PUNTUACIONES AÚN
             </div>
-          ))}
+          ) : (
+            scores.map((r, i) => (
+              <div
+                key={r.player_name + i}
+                className={
+                  "lb-row" +
+                  (i === 0
+                    ? " top1"
+                    : i === 1
+                      ? " top2"
+                      : i === 2
+                        ? " top3"
+                        : "")
+                }
+              >
+                <div className="rk">#{String(i + 1).padStart(2, "0")}</div>
+                <div className="pl">{r.player_name}</div>
+                <div className="sc">{r.best_score.toLocaleString("es-ES")}</div>
+              </div>
+            ))
+          )}
         </div>
       </aside>
     </div>
-  )
+  );
 }

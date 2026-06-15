@@ -1,18 +1,19 @@
 import Link from "next/link";
 import { getGlobalTop20, getGameTop10 } from "@/lib/supabase/scores";
-import { GAMES } from "@/lib/data";
+import { getGames } from "@/lib/supabase/games";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
 export default async function HallOfFamePage() {
-  const gameIdToTitle = Object.fromEntries(GAMES.map((g) => [g.id, g.title]));
+  const games = await getGames();
+  const gameIdToTitle = Object.fromEntries(games.map((g) => [g.id, g.title]));
 
   const [globalTop, perGameResults] = await Promise.all([
     getGlobalTop20(),
-    Promise.all(GAMES.map((g) => getGameTop10(g.id))),
+    Promise.all(games.map((g) => getGameTop10(g.id))),
   ]);
 
-  const perGame = GAMES.map((g, i) => ({ game: g, rows: perGameResults[i] }));
+  const perGame = games.map((g, i) => ({ game: g, rows: perGameResults[i] }));
 
   return (
     <div className="av-hall fade-in">
