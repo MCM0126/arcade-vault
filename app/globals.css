@@ -791,6 +791,39 @@ a { color: inherit; text-decoration: none; }
   background: rgba(245, 255, 0, 0.3);
 }
 
+/* caida (tetris) board + next-piece preview */
+.caida-wrap {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+.caida-board-wrap {
+  position: relative;
+  flex: 0 1 300px;
+  max-width: 100%;
+}
+.caida-next-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.caida-next-label {
+  font-family: var(--pixel);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-dim);
+}
+.caida-next-canvas {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(186, 104, 200, 0.4);
+  box-shadow: 0 0 12px rgba(186, 104, 200, 0.25);
+}
+
 /* game over modal */
 .modal-bd {
   position: fixed; inset: 0; z-index: 80;
