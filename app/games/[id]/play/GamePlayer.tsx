@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { Game, SavedScore } from "@/lib/data";
+import type { Game } from "@/lib/data";
 import AsteroidsCanvas from "./AsteroidsCanvas";
 import type { AsteroidsCanvasHandle } from "./AsteroidsCanvas";
 import type { AsteroidsCallbacks } from "@/lib/games/asteroids";
+import { saveScoreAction } from "./actions";
 
 interface Props {
   game: Game;
@@ -19,14 +20,7 @@ export default function GamePlayer({ game }: Props) {
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [name, setName] = useState(() => {
-    try {
-      const u = localStorage.getItem("av_user");
-      return u ? (JSON.parse(u) as { name: string }).name : "INVITADO";
-    } catch {
-      return "INVITADO";
-    }
-  });
+  const [name, setName] = useState("");
 
   const astRef = useRef<AsteroidsCanvasHandle | null>(null);
 
@@ -59,14 +53,8 @@ export default function GamePlayer({ game }: Props) {
     if (score > 0 && score % 2500 < 100) setLevel((l) => l + 1);
   }, [isAsteroides, score]);
 
-  const saveScore = () => {
-    try {
-      const all: SavedScore[] = JSON.parse(
-        localStorage.getItem("av_scores") ?? "[]"
-      );
-      all.push({ game: game.id, score, name, at: Date.now() });
-      localStorage.setItem("av_scores", JSON.stringify(all));
-    } catch {}
+  const saveScore = async () => {
+    await saveScoreAction(game.id, name, score);
     setSaved(true);
   };
 
@@ -87,7 +75,7 @@ export default function GamePlayer({ game }: Props) {
           <div className="hud-stat">
             <div className="l">Jugador</div>
             <div className="v" style={{ color: "var(--ink)" }}>
-              {name}
+              {name || "—"}
             </div>
           </div>
           <div className="hud-stat">
@@ -174,11 +162,16 @@ export default function GamePlayer({ game }: Props) {
                 <input
                   value={name}
                   onChange={(e) =>
-                    setName(e.target.value.toUpperCase().slice(0, 10))
+                    setName(e.target.value.toUpperCase().slice(0, 30))
                   }
-                  placeholder="TUS INICIALES"
+                  placeholder="TU NOMBRE"
+                  maxLength={30}
                 />
-                <button className="btn yellow" onClick={saveScore}>
+                <button
+                  className="btn yellow"
+                  onClick={saveScore}
+                  disabled={name.trim() === ""}
+                >
                   GUARDAR PUNTUACIÓN
                 </button>
               </div>
