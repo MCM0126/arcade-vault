@@ -3,18 +3,14 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { startAsteroids } from "@/lib/games/asteroids";
 import type {
-  AsteroidsCallbacks,
-  AsteroidsHandle,
-} from "@/lib/games/asteroids";
+  GameCallbacks,
+  GameHandle,
+  GameCanvasHandle,
+  GameCanvasProps,
+} from "@/lib/games/types";
 
-interface Props {
-  callbacks: AsteroidsCallbacks;
-  paused: boolean;
-}
-
-export interface AsteroidsCanvasHandle {
-  restart(): void;
-}
+// Legacy alias so any existing import of AsteroidsCanvasHandle keeps working.
+export type AsteroidsCanvasHandle = GameCanvasHandle;
 
 const TOUCH_BUTTONS = [
   { label: "◄", code: "ArrowLeft", row: 0 },
@@ -27,10 +23,10 @@ function dispatch(code: string, type: "keydown" | "keyup") {
   document.dispatchEvent(new KeyboardEvent(type, { code, bubbles: true }));
 }
 
-const AsteroidsCanvas = forwardRef<AsteroidsCanvasHandle, Props>(
-  ({ callbacks, paused }, ref) => {
+const AsteroidsCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
+  ({ callbacks, paused }: GameCanvasProps, ref) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const handleRef = useRef<AsteroidsHandle | null>(null);
+    const handleRef = useRef<GameHandle | null>(null);
 
     useEffect(() => {
       const canvas = canvasRef.current;

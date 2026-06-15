@@ -1,15 +1,8 @@
-export interface AsteroidsCallbacks {
-  onScore(score: number): void;
-  onLives(lives: number): void;
-  onLevel(level: number): void;
-  onGameOver(finalScore: number): void;
-}
+import type { GameCallbacks, GameHandle } from "./types";
 
-export interface AsteroidsHandle {
-  cleanup(): void;
-  setPaused(paused: boolean): void;
-  restart(): void;
-}
+// Re-export under legacy names so existing imports keep working.
+export type AsteroidsCallbacks = GameCallbacks;
+export type AsteroidsHandle = GameHandle;
 
 const W = 800;
 const H = 600;
@@ -274,8 +267,8 @@ function spawnAsteroids(lvl: number): Asteroid[] {
 
 export function startAsteroids(
   canvas: HTMLCanvasElement,
-  callbacks: AsteroidsCallbacks
-): AsteroidsHandle {
+  callbacks: GameCallbacks
+): GameHandle {
   const ctx = canvas.getContext("2d")!;
 
   let score = 0;
