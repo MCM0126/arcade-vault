@@ -1,6 +1,6 @@
 # 04-supabase-setup
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Dependencias:** ninguna (infraestructura base independiente)
 **Fecha:** 2026-06-14
 **Objetivo:** Instalar y configurar el cliente de Supabase (browser y SSR) como infraestructura base reutilizable para futuros specs de auth, base de datos y real-time.
@@ -12,7 +12,7 @@
 ### Dentro del scope
 
 - Instalar `@supabase/supabase-js` y `@supabase/ssr`
-- Agregar `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` a `.env.template`
+- Agregar `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` a `.env.template`
 - Crear `lib/supabase/client.ts` — cliente browser (singleton con `createBrowserClient`)
 - Crear `lib/supabase/server.ts` — cliente server (función con `createServerClient` + cookies,
   para Server Components y API routes)
@@ -45,7 +45,7 @@ archivos de configuración del cliente; no toca ni crea tablas en Supabase.
 
    ```
    NEXT_PUBLIC_SUPABASE_URL=
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
    ```
 
    El usuario copia `.env.template` a `.env.local` y pega los valores desde
@@ -68,7 +68,7 @@ archivos de configuración del cliente; no toca ni crea tablas en Supabase.
 ## Criterios de aceptación
 
 - [ ] `@supabase/supabase-js` y `@supabase/ssr` aparecen en `package.json`
-- [ ] `.env.template` contiene `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- [ ] `.env.template` contiene `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - [ ] `lib/supabase/client.ts` exporta `createClient()` y compila sin errores
 - [ ] `lib/supabase/server.ts` exporta `createClient()` async y compila sin errores
 - [ ] `proxy.ts` existe en la raíz del proyecto y refresca la cookie de sesión
