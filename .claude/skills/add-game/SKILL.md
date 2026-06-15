@@ -46,9 +46,9 @@ Una vez leída la fuente, documentar mentalmente:
 
 ---
 
-## Paso 2 — Definir la identidad del juego
+## Paso 2 — Definir la identidad del juego (OBLIGATORIO: uno por uno, con confirmación)
 
-Preguntar al usuario lo que no sea obvio por el código:
+**Nunca asumir ni rellenar estos valores en silencio.** Cada campo se propone al usuario y se espera su confirmación o corrección explícita antes de seguir al siguiente. Usar `AskUserQuestion` (con mi propuesta como primera opción "(Recomendado)") para cada campo, o si el campo no se presta a opciones cerradas, preguntar en texto y esperar la respuesta del usuario antes de continuar. No avanzar al Paso 3 hasta tener los 9 campos confirmados:
 
 - **`id`** — kebab-case, único en la tabla `games` (ej. `caida-tetris`, `arkanoid`)
 - **`title`** — nombre en mayúsculas para la UI (ej. `ARKANOID`)
@@ -60,6 +60,8 @@ Preguntar al usuario lo que no sea obvio por el código:
   - Reutilizar existente si aplica (ver `app/globals.css` para `.cover-*` disponibles)
   - O proponer nombre para una nueva clase (p. ej. `cover-arkanoid`)
 - **`sort_order`** — siguiente entero disponible (consultar `SELECT MAX(sort_order) FROM games` o inferir de los 9 juegos actuales: max es 9)
+
+Al cerrar este paso, mostrar un resumen tabular de los 9 campos confirmados y pedir una última confirmación ("¿Todo correcto para continuar?") antes de pasar al Paso 3.
 
 ---
 
@@ -186,7 +188,11 @@ Documentar las decisiones de diseño relevantes para ESTE juego (cobertura de as
 
 ---
 
-## Paso 5 — Cerrar
+## Paso 5 — Confirmación final (OBLIGATORIO antes de escribir el archivo)
+
+Antes de crear `specs/NN-<id>.md`, mostrar al usuario un resumen del contenido planeado del spec: identidad del juego (Paso 2), número de spec, scope (dentro/fuera), y la lista de archivos a crear/modificar (4d) con una línea por archivo. Pedir confirmación explícita ("¿Genero el spec con esto?") usando `AskUserQuestion` o esperando una respuesta clara del usuario. Si el usuario pide cambios, ajustarlos y volver a confirmar antes de escribir. No escribir el archivo sin esta confirmación.
+
+## Paso 6 — Cerrar
 
 Escribir el spec en `specs/NN-<id>.md` con `**Estado: Draft**`.
 
