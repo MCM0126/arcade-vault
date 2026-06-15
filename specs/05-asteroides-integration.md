@@ -1,6 +1,6 @@
 # 05-asteroides-integration
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Dependencias:** 01-mvp-screens (GamePlayer.tsx, lib/data.ts)
 **Fecha:** 2026-06-15
 **Objetivo:** Agregar el juego "ASTEROIDES" (id: `asteroides`) a la plataforma Arcade
