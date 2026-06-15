@@ -3,9 +3,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Game } from "@/lib/types";
-import AsteroidsCanvas from "./AsteroidsCanvas";
-import type { AsteroidsCanvasHandle } from "./AsteroidsCanvas";
-import type { AsteroidsCallbacks } from "@/lib/games/asteroids";
+import { GAME_CANVASES } from "@/lib/games/registry";
+import type { GameCallbacks, GameCanvasHandle } from "@/lib/games/types";
 import { saveScoreAction } from "./actions";
 
 interface Props {
@@ -22,9 +21,9 @@ export default function GamePlayer({ game }: Props) {
   const [saved, setSaved] = useState(false);
   const [name, setName] = useState("");
 
-  const astRef = useRef<AsteroidsCanvasHandle | null>(null);
+  const astRef = useRef<GameCanvasHandle | null>(null);
 
-  const callbacks = useMemo<AsteroidsCallbacks>(
+  const callbacks = useMemo<GameCallbacks>(
     () => ({
       onScore: (s) => setScore(s),
       onLives: (l) => setLives(l),
@@ -37,21 +36,23 @@ export default function GamePlayer({ game }: Props) {
     []
   );
 
-  const isAsteroides = game.id === "asteroides";
+  // True when a real game engine is registered for this game.
+  const Canvas = GAME_CANVASES[game.id] ?? null;
 
+  // CRT mock auto-score — only runs for games without a real engine.
   useEffect(() => {
-    if (isAsteroides || over || paused) return;
+    if (Canvas || over || paused) return;
     const t = setInterval(
       () => setScore((s) => s + Math.floor(10 + Math.random() * 90)),
       220
     );
     return () => clearInterval(t);
-  }, [isAsteroides, over, paused]);
+  }, [Canvas, over, paused]);
 
   useEffect(() => {
-    if (isAsteroides) return;
+    if (Canvas) return;
     if (score > 0 && score % 2500 < 100) setLevel((l) => l + 1);
-  }, [isAsteroides, score]);
+  }, [Canvas, score]);
 
   const saveScore = async () => {
     await saveScoreAction(game.id, name, score);
@@ -107,8 +108,8 @@ export default function GamePlayer({ game }: Props) {
         </div>
       </div>
 
-      {isAsteroides ? (
-        <AsteroidsCanvas ref={astRef} callbacks={callbacks} paused={paused} />
+      {Canvas ? (
+        <Canvas ref={astRef} callbacks={callbacks} paused={paused} />
       ) : (
         <div className="crt">
           <div className="crt-screen">
