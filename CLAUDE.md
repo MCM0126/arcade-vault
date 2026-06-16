@@ -25,6 +25,12 @@ Project-local skills live in `.claude/skills/`:
 - **`/add-game <carpeta o descripción>`** — reads a game source (typically from `references/started-games/`), asks identity-confirmation questions, and writes a Draft spec at `specs/NN-<id>.md`. Never writes code — that's `/spec-impl`'s job.
 - **`/spec`** / **`/spec-impl`** — Spec Driven Design workflow (from Klerith/fernando-skills): `/spec` drafts a spec, `/spec-impl` implements an approved one.
 
+# Agents
+
+Project-local agents live in `.claude/agents/`:
+
+- **`game-planner`** — read-only agent that decides which game should be added to the platform next. It inventories the current catalog, the unported sources in `references/started-games/`, and the platform's fit rules (`.claude/skills/add-game/recipe.md`), then recommends exactly one game. It never writes specs or code — that's still `/add-game` / `/spec-impl`. Its memory lives in `references/games-suggestions.md`, a ledger with four tables (Sugeridos, Aceptados/en desarrollo, Implementados, Descartados) that it reads on every run to avoid repeating past suggestions and appends to when it makes a new one. That file is maintained by the agent — avoid editing it by hand without telling the agent first.
+
 ## Architecture
 
 ### Game integration pattern
