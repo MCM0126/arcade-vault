@@ -1,6 +1,6 @@
 # 08-snake
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Dependencias:** 05-asteroides-integration, 06-leaderboard, 07-catalog-supabase
 **Fecha:** 2026-06-15
 **Objetivo:** Integrar el juego "SNAKE" (id: `snake`) a Arcade Vault portando la
@@ -294,32 +294,32 @@ como archivo: se transcribe como constante TypeScript tipada dentro de
 
 ## Criterios de aceptación
 
-- [ ] El juego `snake` aparece en `/games` en la biblioteca con su card
-- [ ] La card muestra `MEJOR PUNTUACIÓN` (0 hasta que se registre el primer score)
-- [ ] Hacer clic en la card navega a `/games/snake` (detalle)
-- [ ] El botón JUGAR en la card navega a `/games/snake/play`
-- [ ] `/games/snake` muestra la página de detalle sin errores
-- [ ] `/games/snake` muestra "SIN PUNTUACIONES AÚN" en el leaderboard (estado inicial)
-- [ ] `/games/snake/play` carga el canvas con el juego real funcionando
-- [ ] Las frutas se dibujan con los sprites reales de `fruits.png` (no rectángulos)
-- [ ] Comer fruta alarga la serpiente y aumenta el score
-- [ ] Chocar contra el borde del tablero termina la partida
-- [ ] Chocar contra la propia cola termina la partida
-- [ ] La velocidad aumenta perceptiblemente cada 5 frutas comidas
-- [ ] El HUD HTML de la plataforma muestra score, vidas (1→0) y nivel actualizados en tiempo real
-- [ ] El canvas también dibuja su propio HUD interno (score, nivel)
-- [ ] El botón PAUSA detiene el movimiento; el canvas muestra overlay "EN PAUSA"
-- [ ] REANUDAR reactiva el movimiento correctamente
-- [ ] Al chocar, aparece el modal HTML con el score final
-- [ ] El modal muestra un input de nombre del jugador (deshabilitado si vacío)
-- [ ] "GUARDAR PUNTUACIÓN" llama `saveScoreAction` y escribe en Supabase
-- [ ] "JUGAR DE NUEVO" reinicia el juego sin desmontar el canvas
-- [ ] "VOLVER AL VAULT" navega a `/`
-- [ ] Los botones táctiles (4 direcciones) controlan el juego correctamente
-- [ ] Después de guardar un score, `/games/snake` muestra el score en el leaderboard
-- [ ] El juego aparece en `/hall-of-fame` en el global top 20 y en su sección top 10
-- [ ] `tsc --noEmit` pasa limpio
-- [ ] Sin regresiones en `/`, `/games`, `/games/asteroides/play`, `/about`, `/hall-of-fame`
+- [x] El juego `snake` aparece en `/games` en la biblioteca con su card
+- [x] La card muestra `MEJOR PUNTUACIÓN` (0 hasta que se registre el primer score)
+- [x] Hacer clic en la card navega a `/games/snake` (detalle)
+- [x] El botón JUGAR en la card navega a `/games/snake/play`
+- [x] `/games/snake` muestra la página de detalle sin errores
+- [x] `/games/snake` muestra "SIN PUNTUACIONES AÚN" en el leaderboard (estado inicial)
+- [x] `/games/snake/play` carga el canvas con el juego real funcionando
+- [x] Las frutas se dibujan con los sprites reales de `fruits.png` (no rectángulos)
+- [x] Comer fruta alarga la serpiente y aumenta el score
+- [x] Chocar contra el borde del tablero termina la partida
+- [x] Chocar contra la propia cola termina la partida
+- [x] La velocidad aumenta perceptiblemente cada 5 frutas comidas
+- [x] El HUD HTML de la plataforma muestra score, vidas (1→0) y nivel actualizados en tiempo real
+- [x] El canvas también dibuja su propio HUD interno (score, nivel)
+- [x] El botón PAUSA detiene el movimiento; el canvas muestra overlay "EN PAUSA"
+- [x] REANUDAR reactiva el movimiento correctamente
+- [x] Al chocar, aparece el modal HTML con el score final
+- [x] El modal muestra un input de nombre del jugador (deshabilitado si vacío)
+- [x] "GUARDAR PUNTUACIÓN" llama `saveScoreAction` y escribe en Supabase
+- [x] "JUGAR DE NUEVO" reinicia el juego sin desmontar el canvas
+- [x] "VOLVER AL VAULT" navega a `/`
+- [x] Los botones táctiles (4 direcciones) controlan el juego correctamente
+- [x] Después de guardar un score, `/games/snake` muestra el score en el leaderboard
+- [x] El juego aparece en `/hall-of-fame` en el global top 20 y en su sección top 10
+- [x] `tsc --noEmit` pasa limpio
+- [x] Sin regresiones en `/`, `/games`, `/games/asteroides/play`, `/about`, `/hall-of-fame`
 
 ---
 

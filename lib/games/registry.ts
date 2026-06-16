@@ -10,6 +10,7 @@
 import React from "react";
 import type { GameCanvasProps, GameCanvasHandle } from "./types";
 import AsteroidsCanvas from "@/app/games/[id]/play/AsteroidsCanvas";
+import SnakeCanvas from "@/app/games/[id]/play/SnakeCanvas";
 
 type CanvasComponent = React.ForwardRefExoticComponent<
   GameCanvasProps & React.RefAttributes<GameCanvasHandle>
@@ -18,4 +19,5 @@ type CanvasComponent = React.ForwardRefExoticComponent<
 // Partial so missing keys return `undefined` — GamePlayer.tsx checks for this.
 export const GAME_CANVASES: Partial<Record<string, CanvasComponent>> = {
   asteroides: AsteroidsCanvas,
+  snake: SnakeCanvas,
 };
