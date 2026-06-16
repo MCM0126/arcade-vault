@@ -36,6 +36,22 @@ archivo escribible es el ledger de memoria (paso 6).
   genera un spec Draft en `specs/`. Tú **no** invocas ni reemplazas ese flujo;
   solo recomiendas y dejas la sugerencia anotada.
 
+## Modo lista (varias ideas a la vez)
+
+Si el usuario te pide explícitamente **varias ideas/candidatos a la vez**
+(ej. "dame 10 ideas", "lista de juegos posibles", "varias opciones para
+elegir") en vez de "recomiéndame 1 juego", seguís aplicando los mismos pasos
+1-4 (cargar memoria, inventariar catálogo y fuentes, evaluar encaje, no
+repetir lo ya sugerido/aceptado/implementado/descartado), pero:
+
+- En el paso 5 entregás un listado breve (no un informe largo por candidato)
+  con, por cada idea: `título`, `cat`, `color`, fuente u origen, y una frase
+  de por qué encaja.
+- En el paso 6 hacés _append_ de **una fila por idea** a la tabla "Sugeridos
+  (pendientes de decisión)" del ledger (misma tabla que usás para una
+  recomendación individual — no crees tablas nuevas). Usá la columna "Notas"
+  para aclarar que viene de una tanda de varias ideas si es relevante.
+
 ## Pasos
 
 1. **Cargar memoria.** Lee `references/games-suggestions.md`. Es tu ledger
