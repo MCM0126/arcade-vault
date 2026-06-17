@@ -728,28 +728,30 @@ a { color: inherit; text-decoration: none; }
 
 /* asteroids canvas + touch controls */
 .asteroids-wrap {
-  position: relative;
-  display: inline-block;
-  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
 }
 .asteroids-canvas {
   display: block;
   max-width: 100%;
   width: 100%;
+  height: auto;
 }
 .touch-controls {
   display: none;
-  position: absolute;
-  bottom: 12px;
-  left: 0;
-  right: 0;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  padding: 10px 0 4px;
 }
 @media (pointer: coarse) {
   .touch-controls { display: flex; }
+}
+.caida-wrap > .touch-controls {
+  flex-basis: 100%;
 }
 .touch-row {
   display: flex;
@@ -805,6 +807,15 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   flex: 0 1 300px;
   max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+@media (pointer: coarse) {
+  .caida-board-wrap canvas {
+    max-height: 50vh;
+    width: auto;
+  }
 }
 .caida-next-wrap {
   display: flex;

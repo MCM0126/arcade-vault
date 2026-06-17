@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import type { Game } from "@/lib/types";
 import { GAME_CANVASES } from "@/lib/games/registry";
 import type { GameCallbacks, GameCanvasHandle } from "@/lib/games/types";
+import type { SkinId } from "@/lib/games/skins";
+import { DEFAULT_SKIN } from "@/lib/games/skins";
+import SkinSelector from "./SkinSelector";
 import { saveScoreAction } from "./actions";
+
+const SKIN_STORAGE_KEY = "arcade-vault:skin";
 
 interface Props {
   game: Game;
@@ -20,6 +25,15 @@ export default function GamePlayer({ game }: Props) {
   const [over, setOver] = useState(false);
   const [saved, setSaved] = useState(false);
   const [name, setName] = useState("");
+  const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
+
+  // Read persisted skin preference on first mount (client-only).
+  useEffect(() => {
+    const saved = localStorage.getItem(SKIN_STORAGE_KEY) as SkinId | null;
+    if (saved === "classic" || saved === "neon" || saved === "retro") {
+      setSkin(saved);
+    }
+  }, []);
 
   const astRef = useRef<GameCanvasHandle | null>(null);
 
@@ -69,6 +83,14 @@ export default function GamePlayer({ game }: Props) {
     astRef.current?.restart();
   };
 
+  // Persist skin choice and hot-swap the palette in real time.
+  // The engine's setSkin mutates the shared palette object so colors change
+  // on the very next animation frame without restarting the game session.
+  const handleSkinChange = (next: SkinId) => {
+    setSkin(next);
+    localStorage.setItem(SKIN_STORAGE_KEY, next);
+  };
+
   return (
     <div className="av-player fade-in">
       <div className="player-hud">
@@ -107,11 +129,23 @@ export default function GamePlayer({ game }: Props) {
           >
             SALIR
           </button>
+          {Canvas && (
+            <SkinSelector
+              gameId={game.id}
+              skin={skin}
+              onChange={handleSkinChange}
+            />
+          )}
         </div>
       </div>
 
       {Canvas ? (
-        <Canvas ref={astRef} callbacks={callbacks} paused={paused} />
+        <Canvas
+          ref={astRef}
+          callbacks={callbacks}
+          paused={paused}
+          skin={skin}
+        />
       ) : (
         <div className="crt">
           <div className="crt-screen">

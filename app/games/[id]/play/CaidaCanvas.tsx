@@ -57,36 +57,6 @@ const CaidaCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
             height={600}
             className="asteroids-canvas"
           />
-          <div className="touch-controls">
-            <div className="touch-row">
-              {row0.map(({ label, code }) => (
-                <button
-                  key={code}
-                  className="touch-btn"
-                  onPointerDown={() => dispatch(code, "keydown")}
-                  onPointerUp={() => dispatch(code, "keyup")}
-                  onPointerLeave={() => dispatch(code, "keyup")}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="touch-row">
-              {row1.map(({ label, code }) => (
-                <button
-                  key={code}
-                  className={
-                    code === "Space" ? "touch-btn touch-btn-fire" : "touch-btn"
-                  }
-                  onPointerDown={() => dispatch(code, "keydown")}
-                  onPointerUp={() => dispatch(code, "keyup")}
-                  onPointerLeave={() => dispatch(code, "keyup")}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div className="caida-next-wrap">
@@ -97,6 +67,37 @@ const CaidaCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
             height={120}
             className="caida-next-canvas"
           />
+        </div>
+
+        <div className="touch-controls">
+          <div className="touch-row">
+            {row0.map(({ label, code }) => (
+              <button
+                key={code}
+                className="touch-btn"
+                onPointerDown={() => dispatch(code, "keydown")}
+                onPointerUp={() => dispatch(code, "keyup")}
+                onPointerLeave={() => dispatch(code, "keyup")}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="touch-row">
+            {row1.map(({ label, code }) => (
+              <button
+                key={code}
+                className={
+                  code === "Space" ? "touch-btn touch-btn-fire" : "touch-btn"
+                }
+                onPointerDown={() => dispatch(code, "keydown")}
+                onPointerUp={() => dispatch(code, "keyup")}
+                onPointerLeave={() => dispatch(code, "keyup")}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );

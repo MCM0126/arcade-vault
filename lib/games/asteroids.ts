@@ -1,4 +1,6 @@
 import type { GameCallbacks, GameHandle } from "./types";
+import { ASTEROIDES_SKINS, DEFAULT_SKIN } from "./skins";
+import type { SkinId, GamePalette } from "./skins";
 
 // Re-export under legacy names so existing imports keep working.
 export type AsteroidsCallbacks = GameCallbacks;
@@ -35,12 +37,14 @@ class Bullet {
   vx: number;
   vy: number;
   life = 55;
+  private palette: GamePalette;
 
-  constructor(x: number, y: number, angle: number) {
+  constructor(x: number, y: number, angle: number, palette: GamePalette) {
     this.x = x;
     this.y = y;
     this.vx = Math.cos(angle) * 9;
     this.vy = Math.sin(angle) * 9;
+    this.palette = palette;
   }
 
   update() {
@@ -50,7 +54,7 @@ class Bullet {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = "#0ff";
+    ctx.fillStyle = this.palette["bala"];
     ctx.beginPath();
     ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
     ctx.fill();
@@ -69,12 +73,21 @@ class Asteroid {
   size: number;
   radius: number;
   verts: { x: number; y: number }[];
+  private palette: GamePalette;
 
-  constructor(x: number, y: number, size: number, vx?: number, vy?: number) {
+  constructor(
+    x: number,
+    y: number,
+    size: number,
+    palette: GamePalette,
+    vx?: number,
+    vy?: number
+  ) {
     this.x = x;
     this.y = y;
     this.size = size;
     this.radius = size === 3 ? 48 : size === 2 ? 26 : 13;
+    this.palette = palette;
 
     if (vx !== undefined && vy !== undefined) {
       this.vx = vx;
@@ -107,7 +120,7 @@ class Asteroid {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = "#aaa";
+    ctx.strokeStyle = this.palette["asteroide"];
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     this.verts.forEach((v, i) =>
@@ -128,6 +141,11 @@ class Ship {
   vy = 0;
   angle = -Math.PI / 2;
   invincible = 180;
+  private palette: GamePalette;
+
+  constructor(palette: GamePalette) {
+    this.palette = palette;
+  }
 
   update(keys: Set<string>) {
     if (keys.has("ArrowLeft") || keys.has("KeyA")) this.angle -= 0.065;
@@ -153,7 +171,7 @@ class Ship {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = "#0ff";
+    ctx.strokeStyle = this.palette["nave"];
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(18, 0);
@@ -177,7 +195,7 @@ class Particle {
   maxLife: number;
   color: string;
 
-  constructor(x: number, y: number, color = "#fa0") {
+  constructor(x: number, y: number, color: string) {
     this.x = x;
     this.y = y;
     this.color = color;
@@ -215,10 +233,12 @@ class PowerUp {
   vy: number;
   life = 300;
   readonly type = "3x";
+  private palette: GamePalette;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, palette: GamePalette) {
     this.x = x;
     this.y = y;
+    this.palette = palette;
     const a = rand(0, Math.PI * 2);
     this.vx = Math.cos(a) * rand(0.5, 1.5);
     this.vy = Math.sin(a) * rand(0.5, 1.5);
@@ -233,12 +253,15 @@ class PowerUp {
   draw(ctx: CanvasRenderingContext2D, frame: number) {
     ctx.save();
     ctx.translate(this.x, this.y);
-    ctx.strokeStyle = frame % 20 < 10 ? "#ff0" : "#fa0";
+    ctx.strokeStyle =
+      frame % 20 < 10
+        ? this.palette["powerup-borde-a"]
+        : this.palette["powerup-borde-b"];
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(0, 0, 12, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.fillStyle = "#ff0";
+    ctx.fillStyle = this.palette["powerup-texto"];
     ctx.font = "bold 10px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -249,7 +272,7 @@ class PowerUp {
 
 // ---------------------------------------------------------------------------
 
-function spawnAsteroids(lvl: number): Asteroid[] {
+function spawnAsteroids(lvl: number, palette: GamePalette): Asteroid[] {
   const count = 2 + lvl;
   const list: Asteroid[] = [];
   for (let i = 0; i < count; i++) {
@@ -258,7 +281,7 @@ function spawnAsteroids(lvl: number): Asteroid[] {
       x = Math.random() * W;
       y = Math.random() * H;
     } while (dist(x, y, W / 2, H / 2) < 150);
-    list.push(new Asteroid(x, y, 3));
+    list.push(new Asteroid(x, y, 3, palette));
   }
   return list;
 }
@@ -267,9 +290,13 @@ function spawnAsteroids(lvl: number): Asteroid[] {
 
 export function startAsteroids(
   canvas: HTMLCanvasElement,
-  callbacks: GameCallbacks
+  callbacks: GameCallbacks,
+  skin: SkinId = DEFAULT_SKIN
 ): GameHandle {
   const ctx = canvas.getContext("2d")!;
+  // palette is a mutable working copy — mutating it in-place (via setSkin)
+  // instantly propagates new colors to every object that holds this reference.
+  const palette: GamePalette = { ...ASTEROIDES_SKINS[skin] };
 
   let score = 0;
   let lives = 3;
@@ -298,8 +325,8 @@ export function startAsteroids(
     fireTimer = 0;
     deadTimer = 0;
     state = "playing";
-    ship = new Ship();
-    asteroids = spawnAsteroids(1);
+    ship = new Ship(palette);
+    asteroids = spawnAsteroids(1, palette);
     bullets = [];
     particles = [];
     powerups = [];
@@ -311,21 +338,21 @@ export function startAsteroids(
   function nextLevel() {
     level++;
     callbacks.onLevel(level);
-    ship = new Ship();
+    ship = new Ship(palette);
     bullets = [];
     powerups = [];
     tripleFireTimer = 0;
     fireTimer = 0;
-    asteroids = spawnAsteroids(level);
+    asteroids = spawnAsteroids(level, palette);
   }
 
-  function explode(x: number, y: number, count: number, color?: string) {
+  function explode(x: number, y: number, count: number, color: string) {
     for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
   }
 
   function killShip() {
     if (ship.invincible > 0) return;
-    explode(ship.x, ship.y, 20, "#0ff");
+    explode(ship.x, ship.y, 20, palette["particula-nave"]);
     lives--;
     callbacks.onLives(lives);
     if (lives <= 0) {
@@ -346,7 +373,7 @@ export function startAsteroids(
       particles = particles.filter((p) => p.life > 0);
       if (deadTimer <= 0) {
         state = "playing";
-        ship = new Ship();
+        ship = new Ship(palette);
         bullets = [];
       }
       return;
@@ -363,10 +390,10 @@ export function startAsteroids(
     if (keys.has("Space") && fireTimer === 0) {
       if (tripleFireTimer > 0) {
         [-0.15, 0, 0.15].forEach((spread) =>
-          bullets.push(new Bullet(ship.x, ship.y, ship.angle + spread))
+          bullets.push(new Bullet(ship.x, ship.y, ship.angle + spread, palette))
         );
       } else {
-        bullets.push(new Bullet(ship.x, ship.y, ship.angle));
+        bullets.push(new Bullet(ship.x, ship.y, ship.angle, palette));
       }
       fireTimer = tripleFireTimer > 0 ? 7 : 22;
     }
@@ -395,11 +422,11 @@ export function startAsteroids(
         if (!hitAsteroids.has(a) && dist(b.x, b.y, a.x, a.y) < a.radius) {
           hitAsteroids.add(a);
           hit = true;
-          explode(a.x, a.y, a.size * 5, "#fa0");
+          explode(a.x, a.y, a.size * 5, palette["particula-explosion"]);
           score += SCORE_BY_SIZE[a.size];
           callbacks.onScore(score);
           if (a.size === 3 && Math.random() < 0.2) {
-            powerups.push(new PowerUp(a.x, a.y));
+            powerups.push(new PowerUp(a.x, a.y, palette));
           }
           if (a.size > 1) {
             const spreadBase = Math.atan2(a.vy, a.vx);
@@ -411,6 +438,7 @@ export function startAsteroids(
                   a.x,
                   a.y,
                   a.size - 1,
+                  palette,
                   Math.cos(angle) * spd,
                   Math.sin(angle) * spd
                 )
@@ -446,7 +474,7 @@ export function startAsteroids(
   }
 
   function draw() {
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = palette["fondo"];
     ctx.fillRect(0, 0, W, H);
 
     asteroids.forEach((a) => a.draw(ctx));
@@ -458,7 +486,7 @@ export function startAsteroids(
     // Canvas HUD
     ctx.font = "16px monospace";
     ctx.textBaseline = "top";
-    ctx.fillStyle = "#0ff";
+    ctx.fillStyle = palette["hud-primario"];
     ctx.textAlign = "left";
     ctx.fillText(`SCORE: ${score}`, 10, 10);
     ctx.textAlign = "center";
@@ -467,15 +495,15 @@ export function startAsteroids(
     ctx.fillText(`${"♥ ".repeat(Math.max(0, lives)).trim()}`, W - 10, 10);
 
     if (tripleFireTimer > 0) {
-      ctx.fillStyle = "#ff0";
+      ctx.fillStyle = palette["hud-powerup-activo"];
       ctx.textAlign = "center";
       ctx.fillText("3× FUEGO", W / 2, 35);
     }
 
     if (paused) {
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fillStyle = palette["overlay-pausa-fondo"];
       ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = "#0ff";
+      ctx.fillStyle = palette["hud-primario"];
       ctx.font = "bold 42px monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -528,6 +556,12 @@ export function startAsteroids(
     },
     restart() {
       initGame();
+    },
+    setSkin(newSkin: SkinId) {
+      // Mutate the shared palette object in-place so all live game objects
+      // (ship, asteroids, bullets, powerups) pick up the new colors on the
+      // very next animation frame — no restart required.
+      Object.assign(palette, ASTEROIDES_SKINS[newSkin]);
     },
   };
 }

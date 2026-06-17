@@ -8,6 +8,7 @@ import type {
   GameCanvasHandle,
   GameCanvasProps,
 } from "@/lib/games/types";
+import type { SkinId } from "@/lib/games/skins";
 
 // Legacy alias so any existing import of AsteroidsCanvasHandle keeps working.
 export type AsteroidsCanvasHandle = GameCanvasHandle;
@@ -17,6 +18,7 @@ const TOUCH_BUTTONS = [
   { label: "▲", code: "ArrowUp", row: 0 },
   { label: "►", code: "ArrowRight", row: 0 },
   { label: "FIRE", code: "Space", row: 1 },
+  { label: "HIPER", code: "KeyS", row: 1 },
 ];
 
 function dispatch(code: string, type: "keydown" | "keyup") {
@@ -24,17 +26,27 @@ function dispatch(code: string, type: "keydown" | "keyup") {
 }
 
 const AsteroidsCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
-  ({ callbacks, paused }: GameCanvasProps, ref) => {
+  ({ callbacks, paused, skin }: GameCanvasProps, ref) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const handleRef = useRef<GameHandle | null>(null);
+    // Track the initial skin for engine startup.
+    const skinRef = useRef<SkinId | undefined>(skin);
 
     useEffect(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const handle = startAsteroids(canvas, callbacks);
+      const handle = startAsteroids(canvas, callbacks, skinRef.current);
       handleRef.current = handle;
       return () => handle.cleanup();
     }, []); // callbacks is stable (useMemo in parent) — intentional empty deps
+
+    // Hot-swap the palette whenever the skin prop changes — no restart needed.
+    useEffect(() => {
+      if (skin !== undefined) {
+        skinRef.current = skin;
+        handleRef.current?.setSkin?.(skin);
+      }
+    }, [skin]);
 
     useEffect(() => {
       handleRef.current?.setPaused(paused);
