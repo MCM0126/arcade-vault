@@ -8,6 +8,7 @@ import type {
   GameCanvasHandle,
   GameCanvasProps,
 } from "@/lib/games/types";
+import type { SkinId } from "@/lib/games/skins";
 
 // Legacy alias so any existing import of AsteroidsCanvasHandle keeps working.
 export type AsteroidsCanvasHandle = GameCanvasHandle;
@@ -24,14 +25,18 @@ function dispatch(code: string, type: "keydown" | "keyup") {
 }
 
 const AsteroidsCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
-  ({ callbacks, paused }: GameCanvasProps, ref) => {
+  ({ callbacks, paused, skin }: GameCanvasProps, ref) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const handleRef = useRef<GameHandle | null>(null);
+    // Capture the skin at mount time so the palette is resolved once per game
+    // session. Changing skin restarts the game (handled by GamePlayer).
+    const skinRef = useRef<SkinId | undefined>(skin);
+    skinRef.current = skin;
 
     useEffect(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const handle = startAsteroids(canvas, callbacks);
+      const handle = startAsteroids(canvas, callbacks, skinRef.current);
       handleRef.current = handle;
       return () => handle.cleanup();
     }, []); // callbacks is stable (useMemo in parent) — intentional empty deps

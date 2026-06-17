@@ -6,6 +6,8 @@
  * `GameCanvasHandle` through `forwardRef` / `useImperativeHandle`.
  */
 
+import type { SkinId } from "./skins";
+
 /** Push-based callbacks the game engine fires when state changes. */
 export interface GameCallbacks {
   onScore(score: number): void;
@@ -30,4 +32,6 @@ export interface GameCanvasHandle {
 export interface GameCanvasProps {
   callbacks: GameCallbacks;
   paused: boolean;
+  /** Visual palette variant. Defaults to 'classic' when omitted. */
+  skin?: SkinId;
 }
