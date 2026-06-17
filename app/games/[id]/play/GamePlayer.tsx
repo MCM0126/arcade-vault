@@ -108,7 +108,9 @@ export default function GamePlayer({ game }: Props) {
           <div className="hud-stat lives">
             <div className="l">{game.id === "caida" ? "Líneas" : "Vidas"}</div>
             <div className="v">
-              {game.id === "caida" ? lives : "♥ ".repeat(lives).trim() || "—"}
+              {game.id === "caida"
+                ? lives
+                : "♥ ".repeat(Math.max(0, lives)).trim() || "—"}
             </div>
           </div>
           <div className="hud-stat level">
