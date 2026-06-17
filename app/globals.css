@@ -526,6 +526,20 @@ a { color: inherit; text-decoration: none; }
   filter: drop-shadow(0 0 6px rgba(0,245,255,0.4));
 }
 
+.cover-frogger { background: linear-gradient(180deg, #001a0a, #0a0a18); }
+.cover-frogger::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(57,217,57,0.12) 0 14px,
+      rgba(10,42,90,0.18) 14px 28px
+    ),
+    radial-gradient(ellipse at 50% 62%, rgba(57,217,57,0.45) 0 10px, transparent 11px);
+  filter: drop-shadow(0 0 10px rgba(57,217,57,0.5));
+}
+
 /* ===== detail screen ===== */
 .av-detail {
   display: grid;
@@ -975,6 +989,25 @@ a { color: inherit; text-decoration: none; }
   .ab { width: 52px; height: 52px; }
   .ab .ab-letter { font-size: 16px; }
   .gp-actions { gap: 12px; }
+}
+
+/* frogger board wrap */
+.frogger-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+@media (pointer: coarse) {
+  .frogger-wrap canvas {
+    max-height: 50vh;
+    width: auto;
+    max-width: 100%;
+  }
+}
+.frogger-wrap > .touch-controls .gp-body {
+  grid-template-columns: 1fr;
+  justify-items: center;
 }
 
 /* caida (tetris) board + next-piece preview */

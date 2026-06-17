@@ -11,6 +11,7 @@ import React from "react";
 import type { GameCanvasProps, GameCanvasHandle } from "./types";
 import AsteroidsCanvas from "@/app/games/[id]/play/AsteroidsCanvas";
 import CaidaCanvas from "@/app/games/[id]/play/CaidaCanvas";
+import FroggerCanvas from "@/app/games/[id]/play/FroggerCanvas";
 
 type CanvasComponent = React.ForwardRefExoticComponent<
   GameCanvasProps & React.RefAttributes<GameCanvasHandle>
@@ -20,4 +21,5 @@ type CanvasComponent = React.ForwardRefExoticComponent<
 export const GAME_CANVASES: Partial<Record<string, CanvasComponent>> = {
   asteroides: AsteroidsCanvas,
   caida: CaidaCanvas,
+  frogger: FroggerCanvas,
 };
