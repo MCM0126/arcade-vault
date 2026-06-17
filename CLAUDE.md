@@ -18,7 +18,7 @@ Arcade Vault is an online gaming platform where users play and compete for the h
 
 # Skills
 
-usa siempre /forntend-design para disenar la interfaz del usuario
+Usa siempre `/frontend-design` para diseñar la interfaz del usuario.
 
 Project-local skills live in `.claude/skills/`:
 
@@ -31,6 +31,12 @@ Project-local agents live in `.claude/agents/`:
 
 - **`game-planner`** — read-only agent that decides which game should be added to the platform next. It inventories the current catalog, the unported sources in `references/started-games/`, and the platform's fit rules (`.claude/skills/add-game/recipe.md`), then recommends exactly one game. It never writes specs or code — that's still `/add-game` / `/spec-impl`. Its memory lives in `references/games-suggestions.md`, a ledger with four tables (Sugeridos, Aceptados/en desarrollo, Implementados, Descartados) that it reads on every run to avoid repeating past suggestions and appends to when it makes a new one. That file is maintained by the agent — avoid editing it by hand without telling the agent first.
 
+- **`game-jam`** — generates 2 complete alternative specs for a new game concept given a theme. Writes both to `specs/game-jam/<game-id>-a.md` and `specs/game-jam/<game-id>-b.md` (same combined design+integration format as `specs/05-asteroides-integration.md`). Use it when the user gives a theme or concept and asks for a game proposal. Never writes code or SQL migrations — specs only.
+
+- **`skin-designer`** — designs and implements the 3 skins (neon, retro, classic) for a single playable game. Verifies `references/game-with-themes.md` to avoid duplicating work, writes the spec, and applies all code changes (`lib/games/skins.ts`, game engine, types, canvas, UI selector with persistence). Maintains `references/game-with-themes.md` as a ledger. Works one game at a time — only the one the user explicitly names.
+
+- **`mobile-porter`** — audits and fixes mobile layout and touch controls for all registered games. Uses `specs/10-mobile-touch-controls.md` as the baseline: touch controls below the canvas (never overlay), visible only on `pointer: coarse`, never overlapping the game screen.
+
 ## Architecture
 
 ### Game integration pattern
@@ -41,9 +47,27 @@ Each playable game follows the same contract, defined in `lib/games/types.ts`:
 - A React canvas component (`app/games/[id]/play/<Game>Canvas.tsx`) accepts `GameCanvasProps` (`callbacks`, `paused`) and exposes `GameCanvasHandle` (`restart`) via `forwardRef`/`useImperativeHandle`.
 - `lib/games/registry.ts` maps the game's `id` to its Canvas component — this is the **only** file that needs a new entry to wire up a game; `GamePlayer.tsx` reads from it and renders nothing if the id is missing.
 
-Implemented games: see `references/implemented-games.md`. The full catalog is seeded in Supabase, but only games with a registry entry are playable — others show as "coming soon." You can use this reference when you need it.
+Implemented games: see `references/implemented-games.md`. The full catalog is seeded in Supabase, but only games with a registry entry are playable — others show as "coming soon."
+
+Currently playable: `asteroides`, `caida`, `snake`.
 
 Reference game sources used as ports live under `references/started-games/` (asteroids, tetris, arkanoid) and are not part of the shipped app.
+
+### Skin system
+
+`lib/games/skins.ts` — shared skin definitions (classic, neon, retro) used by game engines. Each skin provides a full color palette. The active skin is persisted in `localStorage` and can be changed in real time without restarting the game session.
+
+Skin status per game: see `references/game-with-themes.md`.
+
+Currently skinned: `asteroides` (all 3 skins implemented, spec `specs/09-asteroides-skins.md`).
+
+### Mobile touch controls
+
+Touch controls follow the spec in `specs/10-mobile-touch-controls.md`:
+
+- Controls rendered **below** the canvas, never as an overlay.
+- Visible only when `pointer: coarse` (touch devices); hidden on desktop.
+- Each game's canvas component handles its own touch button layout.
 
 ### Supabase integration
 
