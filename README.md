@@ -1,26 +1,38 @@
-## Arcade Vault
+# Arcade Vault
 
-Es una plataforma para jugar online y competir por la mayor cantidad de puntos.
+Plataforma online para jugar y competir por la mayor cantidad de puntos. Catálogo de juegos en Supabase; solo los juegos con entrada en `lib/games/registry.ts` son jugables — los demás aparecen como "coming soon".
 
-## Usa Spec Driven Design
+## Stack
 
-Basado en /spec y /spec-impl
+- **Next.js 16** (App Router, Turbopack)
+- **React 19.2**
+- **TypeScript** — strict, alias `@/*`
+- **Tailwind CSS v4** — configurado vía `@theme` en `app/globals.css`
+- **Supabase** — catálogo (`games`), puntajes (`scores`), RPCs de estadísticas
 
-Siguiendo las buenas practicas recomendadas aquí:
-https://github.com/Klerith/fernando-skills
+## Juegos jugables
 
-## Skills usadas
+| ID           | Título     | Skins              |
+| ------------ | ---------- | ------------------ |
+| `asteroides` | ASTEROIDES | classic/neon/retro |
+| `caida`      | CAÍDA      | —                  |
+| `snake`      | SNAKE      | —                  |
+
+## Workflow de desarrollo
+
+Sigue **Spec Driven Design**: toda feature se documenta como spec en `specs/NN-<slug>.md` antes de implementarse.
 
 ```bash
-npx skills@latest add Klerith/fernando-skills
+npx skills@latest add Klerith/fernando-skills   # instala /spec y /spec-impl
 ```
 
+Agentes y skills locales del proyecto: ver `CLAUDE.md`.
 
-## Commands
+## Comandos
 
 ```bash
-npm run dev      # Start dev server (Turbopack, outputs to .next/dev)
-npm run build    # Production build (Turbopack)
-npm run start    # Start production server
-npm run lint     # Run ESLint (uses eslint CLI directly, not next lint)
+npm run dev      # Dev server (Turbopack)
+npm run build    # Build de producción (Turbopack)
+npm run start    # Servidor de producción
+npm run lint     # ESLint
 ```

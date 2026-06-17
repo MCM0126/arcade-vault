@@ -13,14 +13,6 @@ import type { SkinId } from "@/lib/games/skins";
 // Legacy alias so any existing import of AsteroidsCanvasHandle keeps working.
 export type AsteroidsCanvasHandle = GameCanvasHandle;
 
-const TOUCH_BUTTONS = [
-  { label: "◄", code: "ArrowLeft", row: 0 },
-  { label: "▲", code: "ArrowUp", row: 0 },
-  { label: "►", code: "ArrowRight", row: 0 },
-  { label: "FIRE", code: "Space", row: 1 },
-  { label: "HIPER", code: "KeyS", row: 1 },
-];
-
 function dispatch(code: string, type: "keydown" | "keyup") {
   document.dispatchEvent(new KeyboardEvent(type, { code, bubbles: true }));
 }
@@ -58,9 +50,6 @@ const AsteroidsCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
       },
     }));
 
-    const row0 = TOUCH_BUTTONS.filter((b) => b.row === 0);
-    const row1 = TOUCH_BUTTONS.filter((b) => b.row === 1);
-
     return (
       <div className="asteroids-wrap">
         <canvas
@@ -70,31 +59,69 @@ const AsteroidsCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
           className="asteroids-canvas"
         />
         <div className="touch-controls">
-          <div className="touch-row">
-            {row0.map(({ label, code }) => (
-              <button
-                key={code}
-                className="touch-btn"
-                onPointerDown={() => dispatch(code, "keydown")}
-                onPointerUp={() => dispatch(code, "keyup")}
-                onPointerLeave={() => dispatch(code, "keyup")}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="touch-row touch-row-fire">
-            {row1.map(({ label, code }) => (
-              <button
-                key={code}
-                className="touch-btn touch-btn-fire"
-                onPointerDown={() => dispatch(code, "keydown")}
-                onPointerUp={() => dispatch(code, "keyup")}
-                onPointerLeave={() => dispatch(code, "keyup")}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="gp">
+            <div className="gp-body">
+              <div className="gp-col gp-col-left">
+                <div className="gp-dpad">
+                  <button
+                    className="dp dp-up"
+                    onPointerDown={() => dispatch("ArrowUp", "keydown")}
+                    onPointerUp={() => dispatch("ArrowUp", "keyup")}
+                    onPointerLeave={() => dispatch("ArrowUp", "keyup")}
+                  >
+                    <svg className="dp-arrow" viewBox="0 0 24 24">
+                      <path d="M12 4 L20 16 L4 16 Z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    className="dp dp-right"
+                    onPointerDown={() => dispatch("ArrowRight", "keydown")}
+                    onPointerUp={() => dispatch("ArrowRight", "keyup")}
+                    onPointerLeave={() => dispatch("ArrowRight", "keyup")}
+                  >
+                    <svg className="dp-arrow" viewBox="0 0 24 24">
+                      <path d="M8 4 L20 12 L8 20 Z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    className="dp dp-down"
+                    onPointerDown={() => dispatch("KeyS", "keydown")}
+                    onPointerUp={() => dispatch("KeyS", "keyup")}
+                    onPointerLeave={() => dispatch("KeyS", "keyup")}
+                  >
+                    <svg className="dp-arrow" viewBox="0 0 24 24">
+                      <path d="M4 8 L20 8 L12 20 Z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    className="dp dp-left"
+                    onPointerDown={() => dispatch("ArrowLeft", "keydown")}
+                    onPointerUp={() => dispatch("ArrowLeft", "keyup")}
+                    onPointerLeave={() => dispatch("ArrowLeft", "keyup")}
+                  >
+                    <svg className="dp-arrow" viewBox="0 0 24 24">
+                      <path d="M16 4 L16 20 L4 12 Z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <div className="dp-hub">
+                    <span className="dp-hub-gem" />
+                  </div>
+                </div>
+              </div>
+              <div className="gp-col gp-col-right">
+                <div className="gp-actions">
+                  <button
+                    className="ab a"
+                    onPointerDown={() => dispatch("Space", "keydown")}
+                    onPointerUp={() => dispatch("Space", "keyup")}
+                    onPointerLeave={() => dispatch("Space", "keyup")}
+                  >
+                    <span className="ab-ring" />
+                    <span className="ab-letter">A</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
