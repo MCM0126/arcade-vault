@@ -18,6 +18,7 @@ const TOUCH_BUTTONS = [
   { label: "▲", code: "ArrowUp", row: 0 },
   { label: "►", code: "ArrowRight", row: 0 },
   { label: "FIRE", code: "Space", row: 1 },
+  { label: "HIPER", code: "KeyS", row: 1 },
 ];
 
 function dispatch(code: string, type: "keydown" | "keyup") {
