@@ -21,6 +21,8 @@ export interface GameHandle {
   cleanup(): void;
   setPaused(paused: boolean): void;
   restart(): void;
+  /** Hot-swap the visual palette without restarting the game session. */
+  setSkin?(skin: SkinId): void;
 }
 
 /** The ref interface exposed by every `<*Canvas>` component. */

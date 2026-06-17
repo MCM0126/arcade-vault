@@ -83,18 +83,12 @@ export default function GamePlayer({ game }: Props) {
     astRef.current?.restart();
   };
 
-  // Persist skin choice and restart the engine so the new palette takes effect.
+  // Persist skin choice and hot-swap the palette in real time.
+  // The engine's setSkin mutates the shared palette object so colors change
+  // on the very next animation frame without restarting the game session.
   const handleSkinChange = (next: SkinId) => {
     setSkin(next);
     localStorage.setItem(SKIN_STORAGE_KEY, next);
-    // Restart so startAsteroids is re-called with the new skin.
-    setScore(0);
-    setLives(3);
-    setLevel(1);
-    setPaused(false);
-    setOver(false);
-    setSaved(false);
-    astRef.current?.restart();
   };
 
   return (

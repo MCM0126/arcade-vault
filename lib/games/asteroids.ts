@@ -294,7 +294,9 @@ export function startAsteroids(
   skin: SkinId = DEFAULT_SKIN
 ): GameHandle {
   const ctx = canvas.getContext("2d")!;
-  const palette = ASTEROIDES_SKINS[skin];
+  // palette is a mutable working copy — mutating it in-place (via setSkin)
+  // instantly propagates new colors to every object that holds this reference.
+  const palette: GamePalette = { ...ASTEROIDES_SKINS[skin] };
 
   let score = 0;
   let lives = 3;
@@ -554,6 +556,12 @@ export function startAsteroids(
     },
     restart() {
       initGame();
+    },
+    setSkin(newSkin: SkinId) {
+      // Mutate the shared palette object in-place so all live game objects
+      // (ship, asteroids, bullets, powerups) pick up the new colors on the
+      // very next animation frame — no restart required.
+      Object.assign(palette, ASTEROIDES_SKINS[newSkin]);
     },
   };
 }

@@ -28,10 +28,8 @@ const AsteroidsCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
   ({ callbacks, paused, skin }: GameCanvasProps, ref) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const handleRef = useRef<GameHandle | null>(null);
-    // Capture the skin at mount time so the palette is resolved once per game
-    // session. Changing skin restarts the game (handled by GamePlayer).
+    // Track the initial skin for engine startup.
     const skinRef = useRef<SkinId | undefined>(skin);
-    skinRef.current = skin;
 
     useEffect(() => {
       const canvas = canvasRef.current;
@@ -40,6 +38,14 @@ const AsteroidsCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
       handleRef.current = handle;
       return () => handle.cleanup();
     }, []); // callbacks is stable (useMemo in parent) — intentional empty deps
+
+    // Hot-swap the palette whenever the skin prop changes — no restart needed.
+    useEffect(() => {
+      if (skin !== undefined) {
+        skinRef.current = skin;
+        handleRef.current?.setSkin?.(skin);
+      }
+    }, [skin]);
 
     useEffect(() => {
       handleRef.current?.setPaused(paused);
