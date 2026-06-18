@@ -1,6 +1,6 @@
 # 15-security-hardening
 
-**Estado:** Draft
+**Estado:** Implementado
 **Dependencias:** 04-supabase-setup, 14-auth
 **Fecha:** 2026-06-18
 **Objetivo:** Aplicar las medidas de seguridad del checklist identificado: corregir warnings de funciones Supabase (search_path mutable y permisos SECURITY DEFINER), configurar políticas de autenticación vía MCP, añadir headers HTTP de seguridad en Next.js, reforzar la validación del password en el flujo de registro, y documentar el patrón de protección de rutas en proxy.ts.
