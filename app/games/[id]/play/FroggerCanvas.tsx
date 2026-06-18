@@ -20,17 +20,21 @@ function dispatch(code: string, type: "keydown" | "keyup") {
 
 const FroggerCanvas = memo(
   forwardRef<GameCanvasHandle, GameCanvasProps>(
-    ({ callbacks, paused }: GameCanvasProps, ref) => {
+    ({ callbacks, paused, skin }: GameCanvasProps, ref) => {
       const canvasRef = useRef<HTMLCanvasElement | null>(null);
       const handleRef = useRef<GameHandle | null>(null);
 
       useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-        const handle = startFrogger(canvas, callbacks);
+        const handle = startFrogger(canvas, callbacks, skin);
         handleRef.current = handle;
         return () => handle.cleanup();
       }, []); // callbacks is stable (useMemo in parent)
+
+      useEffect(() => {
+        handleRef.current?.setSkin?.(skin ?? "classic");
+      }, [skin]);
 
       useEffect(() => {
         handleRef.current?.setPaused(paused);
@@ -44,7 +48,7 @@ const FroggerCanvas = memo(
 
       return (
         <div className="frogger-wrap">
-          <canvas ref={canvasRef} className="asteroids-canvas" />
+          <canvas ref={canvasRef} className="frogger-canvas" />
 
           <div className="touch-controls">
             <div className="gp">

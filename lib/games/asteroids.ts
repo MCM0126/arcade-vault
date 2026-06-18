@@ -8,7 +8,8 @@ export type AsteroidsHandle = GameHandle;
 
 const W = 800;
 const H = 600;
-const SCORE_BY_SIZE = [0, 100, 50, 25]; // index by size (1=small,2=med,3=large)
+// Maps asteroid size (1=small, 2=medium, 3=large) to score value.
+const SCORE_BY_SIZE: Record<number, number> = { 1: 100, 2: 50, 3: 25 };
 
 function wrap(v: number, lo: number, hi: number): number {
   const r = hi - lo;
@@ -29,6 +30,15 @@ function randInt(min: number, max: number): number {
   return Math.floor(rand(min, max + 1));
 }
 
+/** Removes items in-place for which pred returns false. O(n), zero allocations. */
+function compact<T>(arr: T[], pred: (item: T) => boolean): void {
+  let w = 0;
+  for (let r = 0; r < arr.length; r++) {
+    if (pred(arr[r])) arr[w++] = arr[r];
+  }
+  arr.length = w;
+}
+
 // ---------------------------------------------------------------------------
 
 class Bullet {
@@ -47,10 +57,11 @@ class Bullet {
     this.palette = palette;
   }
 
-  update() {
-    this.x = wrap(this.x + this.vx, 0, W);
-    this.y = wrap(this.y + this.vy, 0, H);
-    this.life--;
+  update(dt: number) {
+    const s = dt * 60;
+    this.x = wrap(this.x + this.vx * s, 0, W);
+    this.y = wrap(this.y + this.vy * s, 0, H);
+    this.life -= s;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -73,6 +84,8 @@ class Asteroid {
   size: number;
   radius: number;
   verts: { x: number; y: number }[];
+  // Set when destroyed this tick; cleared at the start of each collision pass.
+  hit = false;
   private palette: GamePalette;
 
   constructor(
@@ -110,10 +123,11 @@ class Asteroid {
     });
   }
 
-  update() {
-    this.x = wrap(this.x + this.vx, 0, W);
-    this.y = wrap(this.y + this.vy, 0, H);
-    this.angle += this.rot;
+  update(dt: number) {
+    const s = dt * 60;
+    this.x = wrap(this.x + this.vx * s, 0, W);
+    this.y = wrap(this.y + this.vy * s, 0, H);
+    this.angle += this.rot * s;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -147,27 +161,31 @@ class Ship {
     this.palette = palette;
   }
 
-  update(keys: Set<string>) {
-    if (keys.has("ArrowLeft") || keys.has("KeyA")) this.angle -= 0.065;
-    if (keys.has("ArrowRight") || keys.has("KeyD")) this.angle += 0.065;
+  update(keys: Set<string>, dt: number) {
+    const s = dt * 60;
+    if (keys.has("ArrowLeft") || keys.has("KeyA")) this.angle -= 0.065 * s;
+    if (keys.has("ArrowRight") || keys.has("KeyD")) this.angle += 0.065 * s;
     if (keys.has("ArrowUp") || keys.has("KeyW")) {
-      this.vx += Math.cos(this.angle) * 0.22;
-      this.vy += Math.sin(this.angle) * 0.22;
+      this.vx += Math.cos(this.angle) * 0.22 * s;
+      this.vy += Math.sin(this.angle) * 0.22 * s;
     }
-    this.vx *= 0.985;
-    this.vy *= 0.985;
+    // Drag: apply per-frame factor raised to the number of logical frames in dt.
+    const drag = Math.pow(0.985, s);
+    this.vx *= drag;
+    this.vy *= drag;
     const spd = Math.hypot(this.vx, this.vy);
     if (spd > 7) {
       this.vx = (this.vx / spd) * 7;
       this.vy = (this.vy / spd) * 7;
     }
-    this.x = wrap(this.x + this.vx, 0, W);
-    this.y = wrap(this.y + this.vy, 0, H);
-    if (this.invincible > 0) this.invincible--;
+    this.x = wrap(this.x + this.vx * s, 0, W);
+    this.y = wrap(this.y + this.vy * s, 0, H);
+    if (this.invincible > 0) this.invincible -= s;
   }
 
-  draw(ctx: CanvasRenderingContext2D, frame: number) {
-    if (this.invincible > 0 && frame % 6 < 3) return;
+  // blinkTimer is a seconds-based accumulator used for frame-rate-independent blinking.
+  draw(ctx: CanvasRenderingContext2D, blinkTimer: number) {
+    if (this.invincible > 0 && blinkTimer % 0.1 < 0.05) return;
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
@@ -200,22 +218,24 @@ class Particle {
     this.y = y;
     this.color = color;
     const a = rand(0, Math.PI * 2);
-    const s = rand(1, 4);
-    this.vx = Math.cos(a) * s;
-    this.vy = Math.sin(a) * s;
+    const spd = rand(1, 4);
+    this.vx = Math.cos(a) * spd;
+    this.vy = Math.sin(a) * spd;
     this.maxLife = this.life = randInt(20, 45);
   }
 
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    this.vx *= 0.97;
-    this.vy *= 0.97;
-    this.life--;
+  update(dt: number) {
+    const s = dt * 60;
+    this.x += this.vx * s;
+    this.y += this.vy * s;
+    const drag = Math.pow(0.97, s);
+    this.vx *= drag;
+    this.vy *= drag;
+    this.life -= s;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    ctx.globalAlpha = this.life / this.maxLife;
+    ctx.globalAlpha = Math.max(0, this.life) / this.maxLife;
     ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
@@ -244,17 +264,20 @@ class PowerUp {
     this.vy = Math.sin(a) * rand(0.5, 1.5);
   }
 
-  update() {
-    this.x = wrap(this.x + this.vx, 0, W);
-    this.y = wrap(this.y + this.vy, 0, H);
-    this.life--;
+  update(dt: number) {
+    const s = dt * 60;
+    this.x = wrap(this.x + this.vx * s, 0, W);
+    this.y = wrap(this.y + this.vy * s, 0, H);
+    this.life -= s;
   }
 
-  draw(ctx: CanvasRenderingContext2D, frame: number) {
+  // blinkTimer is a seconds-based accumulator (same instance as Ship.draw).
+  draw(ctx: CanvasRenderingContext2D, blinkTimer: number) {
     ctx.save();
     ctx.translate(this.x, this.y);
+    // Blink every ~0.333 s (≈ 20 frames at 60 Hz), alternating border colors.
     ctx.strokeStyle =
-      frame % 20 < 10
+      blinkTimer % 0.333 < 0.167
         ? this.palette["powerup-borde-a"]
         : this.palette["powerup-borde-b"];
     ctx.lineWidth = 1.5;
@@ -302,11 +325,14 @@ export function startAsteroids(
   let lives = 3;
   let level = 1;
   let state: "playing" | "dead" | "gameover" = "playing";
-  let frame = 0;
+  // Seconds-based accumulator for frame-rate-independent blink effects.
+  let blinkTimer = 0;
   let paused = false;
   let tripleFireTimer = 0;
   let fireTimer = 0;
   let deadTimer = 0;
+  // Tracks the previous RAF timestamp to compute delta-time each frame.
+  let lastTs = 0;
 
   let ship: Ship;
   let asteroids: Asteroid[];
@@ -320,10 +346,11 @@ export function startAsteroids(
     score = 0;
     lives = 3;
     level = 1;
-    frame = 0;
+    blinkTimer = 0;
     tripleFireTimer = 0;
     fireTimer = 0;
     deadTimer = 0;
+    lastTs = 0;
     state = "playing";
     ship = new Ship(palette);
     asteroids = spawnAsteroids(1, palette);
@@ -364,13 +391,13 @@ export function startAsteroids(
     }
   }
 
-  function update() {
-    frame++;
+  function update(dt: number) {
+    blinkTimer += dt;
 
     if (state === "dead") {
-      deadTimer--;
-      particles.forEach((p) => p.update());
-      particles = particles.filter((p) => p.life > 0);
+      deadTimer -= dt * 60;
+      for (let i = 0; i < particles.length; i++) particles[i].update(dt);
+      compact(particles, (p) => p.life > 0);
       if (deadTimer <= 0) {
         state = "playing";
         ship = new Ship(palette);
@@ -380,14 +407,14 @@ export function startAsteroids(
     }
 
     if (state === "gameover") {
-      particles.forEach((p) => p.update());
-      particles = particles.filter((p) => p.life > 0);
+      for (let i = 0; i < particles.length; i++) particles[i].update(dt);
+      compact(particles, (p) => p.life > 0);
       return;
     }
 
-    // Fire
-    if (fireTimer > 0) fireTimer--;
-    if (keys.has("Space") && fireTimer === 0) {
+    // Fire cooldown
+    if (fireTimer > 0) fireTimer -= dt * 60;
+    if (keys.has("Space") && fireTimer <= 0) {
       if (tripleFireTimer > 0) {
         [-0.15, 0, 0.15].forEach((spread) =>
           bullets.push(new Bullet(ship.x, ship.y, ship.angle + spread, palette))
@@ -397,31 +424,34 @@ export function startAsteroids(
       }
       fireTimer = tripleFireTimer > 0 ? 7 : 22;
     }
-    if (tripleFireTimer > 0) tripleFireTimer--;
+    if (tripleFireTimer > 0) tripleFireTimer -= dt * 60;
 
-    ship.update(keys);
+    ship.update(keys, dt);
 
-    bullets.forEach((b) => b.update());
-    bullets = bullets.filter((b) => b.life > 0);
+    for (let i = 0; i < bullets.length; i++) bullets[i].update(dt);
+    compact(bullets, (b) => b.life > 0);
 
-    asteroids.forEach((a) => a.update());
+    for (let i = 0; i < asteroids.length; i++) asteroids[i].update(dt);
 
-    particles.forEach((p) => p.update());
-    particles = particles.filter((p) => p.life > 0);
+    for (let i = 0; i < particles.length; i++) particles[i].update(dt);
+    compact(particles, (p) => p.life > 0);
 
-    powerups.forEach((pu) => pu.update());
-    powerups = powerups.filter((pu) => pu.life > 0);
+    for (let i = 0; i < powerups.length; i++) powerups[i].update(dt);
+    compact(powerups, (pu) => pu.life > 0);
 
-    // Bullet-asteroid collisions
-    const hitAsteroids = new Set<Asteroid>();
-    const nextBullets: Bullet[] = [];
+    // Bullet-asteroid collisions — no new Set or array allocation per frame.
+    // Reset hit flags before the pass.
+    for (let i = 0; i < asteroids.length; i++) asteroids[i].hit = false;
 
-    for (const b of bullets) {
-      let hit = false;
-      for (const a of asteroids) {
-        if (!hitAsteroids.has(a) && dist(b.x, b.y, a.x, a.y) < a.radius) {
-          hitAsteroids.add(a);
-          hit = true;
+    let bulletWrite = 0;
+    for (let bi = 0; bi < bullets.length; bi++) {
+      const b = bullets[bi];
+      let hitThisBullet = false;
+      for (let ai = 0; ai < asteroids.length; ai++) {
+        const a = asteroids[ai];
+        if (!a.hit && dist(b.x, b.y, a.x, a.y) < a.radius) {
+          a.hit = true;
+          hitThisBullet = true;
           explode(a.x, a.y, a.size * 5, palette["particula-explosion"]);
           score += SCORE_BY_SIZE[a.size];
           callbacks.onScore(score);
@@ -445,13 +475,13 @@ export function startAsteroids(
               );
             });
           }
+          break; // one bullet destroys one asteroid
         }
       }
-      if (!hit) nextBullets.push(b);
+      if (!hitThisBullet) bullets[bulletWrite++] = b;
     }
-
-    bullets = nextBullets;
-    asteroids = asteroids.filter((a) => !hitAsteroids.has(a));
+    bullets.length = bulletWrite;
+    compact(asteroids, (a) => !a.hit);
 
     // Ship-asteroid collision
     for (const a of asteroids) {
@@ -461,14 +491,17 @@ export function startAsteroids(
       }
     }
 
-    // Ship-powerup collision
-    powerups = powerups.filter((pu) => {
+    // Ship-powerup collision — compact removes collected power-ups in-place.
+    let pw = 0;
+    for (let i = 0; i < powerups.length; i++) {
+      const pu = powerups[i];
       if (dist(ship.x, ship.y, pu.x, pu.y) < 20) {
         tripleFireTimer = 300;
-        return false;
+      } else {
+        powerups[pw++] = pu;
       }
-      return true;
-    });
+    }
+    powerups.length = pw;
 
     if (asteroids.length === 0) nextLevel();
   }
@@ -477,11 +510,11 @@ export function startAsteroids(
     ctx.fillStyle = palette["fondo"];
     ctx.fillRect(0, 0, W, H);
 
-    asteroids.forEach((a) => a.draw(ctx));
-    bullets.forEach((b) => b.draw(ctx));
-    if (state === "playing") ship.draw(ctx, frame);
-    particles.forEach((p) => p.draw(ctx));
-    powerups.forEach((pu) => pu.draw(ctx, frame));
+    for (let i = 0; i < asteroids.length; i++) asteroids[i].draw(ctx);
+    for (let i = 0; i < bullets.length; i++) bullets[i].draw(ctx);
+    if (state === "playing") ship.draw(ctx, blinkTimer);
+    for (let i = 0; i < particles.length; i++) particles[i].draw(ctx);
+    for (let i = 0; i < powerups.length; i++) powerups[i].draw(ctx, blinkTimer);
 
     // Canvas HUD
     ctx.font = "16px monospace";
@@ -511,10 +544,16 @@ export function startAsteroids(
     }
   }
 
-  function loop() {
-    if (!paused) update();
+  function loop(ts: number) {
+    // Cap dt at 50 ms to avoid a physics jump after tab switch or jank.
+    const dt = Math.min(ts - (lastTs || ts), 50) / 1000;
+    lastTs = ts;
+    if (!paused) update(dt);
     draw();
-    rafId = requestAnimationFrame(loop);
+    // Stop the loop once gameover is reached and all explosion particles are gone.
+    if (state !== "gameover" || particles.length > 0) {
+      rafId = requestAnimationFrame(loop);
+    }
   }
 
   const GAME_KEYS = new Set([
@@ -539,8 +578,20 @@ export function startAsteroids(
     keys.delete((e as KeyboardEvent).code);
   }
 
+  // Pause RAF while the tab is hidden to avoid burning CPU in the background.
+  function onVisibilityChange() {
+    if (document.hidden) {
+      cancelAnimationFrame(rafId);
+    } else if (state !== "gameover") {
+      // Reset lastTs so the first frame after returning gets dt = 0 (no jump).
+      lastTs = 0;
+      rafId = requestAnimationFrame(loop);
+    }
+  }
+
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("keyup", onKeyUp);
+  document.addEventListener("visibilitychange", onVisibilityChange);
 
   initGame();
   let rafId = requestAnimationFrame(loop);
@@ -550,12 +601,19 @@ export function startAsteroids(
       cancelAnimationFrame(rafId);
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("keyup", onKeyUp);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     },
     setPaused(p: boolean) {
       paused = p;
     },
     restart() {
+      // Re-enqueue the loop if it had stopped after game-over.
+      const wasOver = state === "gameover";
       initGame();
+      if (wasOver) {
+        lastTs = 0;
+        rafId = requestAnimationFrame(loop);
+      }
     },
     setSkin(newSkin: SkinId) {
       // Mutate the shared palette object in-place so all live game objects

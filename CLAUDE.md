@@ -29,13 +29,11 @@ Project-local skills live in `.claude/skills/`:
 
 Project-local agents live in `.claude/agents/`:
 
-- **`game-planner`** — read-only agent that decides which game should be added to the platform next. It inventories the current catalog, the unported sources in `references/started-games/`, and the platform's fit rules (`.claude/skills/add-game/recipe.md`), then recommends exactly one game. It never writes specs or code — that's still `/add-game` / `/spec-impl`. Its memory lives in `references/games-suggestions.md`, a ledger with four tables (Sugeridos, Aceptados/en desarrollo, Implementados, Descartados) that it reads on every run to avoid repeating past suggestions and appends to when it makes a new one. That file is maintained by the agent — avoid editing it by hand without telling the agent first.
-
-- **`game-jam`** — generates 2 complete alternative specs for a new game concept given a theme. Writes both to `specs/game-jam/<game-id>-a.md` and `specs/game-jam/<game-id>-b.md` (same combined design+integration format as `specs/05-asteroides-integration.md`). Use it when the user gives a theme or concept and asks for a game proposal. Never writes code or SQL migrations — specs only.
-
-- **`skin-designer`** — designs and implements the 3 skins (neon, retro, classic) for a single playable game. Verifies `references/game-with-themes.md` to avoid duplicating work, writes the spec, and applies all code changes (`lib/games/skins.ts`, game engine, types, canvas, UI selector with persistence). Maintains `references/game-with-themes.md` as a ledger. Works one game at a time — only the one the user explicitly names.
-
-- **`mobile-porter`** — audits and fixes mobile layout and touch controls for all registered games. Uses `specs/10-mobile-touch-controls.md` as the baseline: touch controls below the canvas (never overlay), visible only on `pointer: coarse`, never overlapping the game screen.
+- **`game-planner`** — recomienda el próximo juego a agregar a la plataforma. Ver `.claude/agents/game-planner.md`.
+- **`game-jam`** — genera 2 specs alternativos de un juego nuevo a partir de un tema. Ver `.claude/agents/game-jam.md`.
+- **`skin-designer`** — diseña e implementa los 3 skins (neon, retro, classic) para un juego. Ver `.claude/agents/skin-designer.md`.
+- **`mobile-porter`** — audita y corrige el layout móvil y los controles táctiles. Ver `.claude/agents/mobile-porter.md`.
+- **`game-performance-booster`** — optimiza el performance de un juego (React layer + game loop). Ver `.claude/agents/game-performance-booster.md`.
 
 ## Architecture
 
@@ -49,7 +47,7 @@ Each playable game follows the same contract, defined in `lib/games/types.ts`:
 
 Implemented games: see `references/implemented-games.md`. The full catalog is seeded in Supabase, but only games with a registry entry are playable — others show as "coming soon."
 
-Currently playable: `asteroides`, `caida`, `snake`.
+Currently playable: `asteroides`, `caida`, `snake`, `frogger`.
 
 Reference game sources used as ports live under `references/started-games/` (asteroids, tetris, arkanoid) and are not part of the shipped app.
 
@@ -59,7 +57,7 @@ Reference game sources used as ports live under `references/started-games/` (ast
 
 Skin status per game: see `references/game-with-themes.md`.
 
-Currently skinned: `asteroides` (all 3 skins implemented, spec `specs/09-asteroides-skins.md`).
+Currently skinned: `asteroides` (all 3 skins implemented, spec `specs/09-asteroides-skins.md`). `frogger` skins spec aprobado (`specs/12-frogger-skins.md`), pendiente de marcar como implementado en `references/game-with-themes.md`.
 
 ### Mobile touch controls
 
@@ -79,7 +77,7 @@ Touch controls follow the spec in `specs/10-mobile-touch-controls.md`:
 
 ### Specs
 
-All feature work is documented as a spec in `specs/NN-<slug>.md` before implementation (Spec Driven Design). Existing specs cover: MVP screens, home/about pages, Supabase setup, Asteroides integration, leaderboard, catalog migration to Supabase, and Caída (Tetris-style) integration.
+All feature work is documented as a spec in `specs/NN-<slug>.md` before implementation (Spec Driven Design). Existing specs cover: MVP screens, home/about pages, Supabase setup, Asteroides integration, leaderboard, catalog migration to Supabase, Caída (Tetris-style) integration, Asteroides skins, mobile touch controls, Gamepad MK-II touch redesign (`11`), Frogger skins (`12`), and React render optimization (`13`).
 
 ## Next.js 16 Breaking Changes
 

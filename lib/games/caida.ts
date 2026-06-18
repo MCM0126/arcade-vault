@@ -82,6 +82,27 @@ export function startCaida(
   const ctx = canvas.getContext("2d")!;
   const nextCtx = nextCanvas.getContext("2d")!;
 
+  // Build a static grid image once — reused every frame via drawImage instead
+  // of re-issuing 28 beginPath/stroke calls at 60 fps.
+  const gridCanvas = document.createElement("canvas");
+  gridCanvas.width = canvas.width;
+  gridCanvas.height = canvas.height;
+  const gridCtx = gridCanvas.getContext("2d")!;
+  gridCtx.strokeStyle = "rgba(255,255,255,0.06)";
+  gridCtx.lineWidth = 0.5;
+  for (let c = 1; c < COLS; c++) {
+    gridCtx.beginPath();
+    gridCtx.moveTo(c * BLOCK, 0);
+    gridCtx.lineTo(c * BLOCK, ROWS * BLOCK);
+    gridCtx.stroke();
+  }
+  for (let r = 1; r < ROWS; r++) {
+    gridCtx.beginPath();
+    gridCtx.moveTo(0, r * BLOCK);
+    gridCtx.lineTo(COLS * BLOCK, r * BLOCK);
+    gridCtx.stroke();
+  }
+
   let board: Board;
   let current: Piece;
   let next: Piece;
@@ -93,6 +114,7 @@ export function startCaida(
   let lastTime = 0;
   let dropAccum = 0;
   let dropInterval = 1000;
+  let rafId = 0;
 
   function createBoard(): Board {
     return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -231,40 +253,9 @@ export function startCaida(
     context.globalAlpha = 1;
   }
 
-  function drawGrid(): void {
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
-    ctx.lineWidth = 0.5;
-    for (let c = 1; c < COLS; c++) {
-      ctx.beginPath();
-      ctx.moveTo(c * BLOCK, 0);
-      ctx.lineTo(c * BLOCK, ROWS * BLOCK);
-      ctx.stroke();
-    }
-    for (let r = 1; r < ROWS; r++) {
-      ctx.beginPath();
-      ctx.moveTo(0, r * BLOCK);
-      ctx.lineTo(COLS * BLOCK, r * BLOCK);
-      ctx.stroke();
-    }
-  }
-
-  function drawHud(): void {
-    ctx.fillStyle = "rgba(10,10,18,0.55)";
-    ctx.fillRect(0, 0, canvas.width, 22);
-    ctx.fillStyle = "#e8e8f0";
-    ctx.font = "bold 11px monospace";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillText(
-      `SCORE ${score.toLocaleString()}  LÍNEAS ${lines}  NIVEL ${level}`,
-      6,
-      11
-    );
-  }
-
   function draw(): void {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
+    ctx.drawImage(gridCanvas, 0, 0);
 
     for (let r = 0; r < ROWS; r++)
       for (let c = 0; c < COLS; c++) drawBlock(ctx, c, r, board[r][c], BLOCK);
@@ -292,8 +283,6 @@ export function startCaida(
           BLOCK
         );
 
-    drawHud();
-
     if (paused) {
       ctx.fillStyle = "rgba(0,0,0,0.55)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -306,14 +295,13 @@ export function startCaida(
   }
 
   function drawNext(): void {
-    const NB = 30;
     nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
     const shape = next.shape;
     const offX = Math.floor((4 - shape[0].length) / 2);
     const offY = Math.floor((4 - shape.length) / 2);
     for (let r = 0; r < shape.length; r++)
       for (let c = 0; c < shape[r].length; c++)
-        drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
+        drawBlock(nextCtx, offX + c, offY + r, shape[r][c], BLOCK);
   }
 
   function endGame(): void {
@@ -324,7 +312,7 @@ export function startCaida(
 
   function loop(ts: number): void {
     if (gameOver) return;
-    const dt = ts - lastTime;
+    const dt = Math.min(ts - lastTime, 50);
     lastTime = ts;
     if (!paused) {
       dropAccum += dt;
@@ -366,6 +354,7 @@ export function startCaida(
   }
 
   function initGame(): void {
+    cancelAnimationFrame(rafId);
     board = createBoard();
     score = 0;
     lines = 0;
@@ -380,17 +369,28 @@ export function startCaida(
     callbacks.onScore(0);
     callbacks.onLives(0);
     callbacks.onLevel(1);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function onVisibilityChange(): void {
+    if (document.hidden) {
+      cancelAnimationFrame(rafId);
+    } else if (!gameOver) {
+      lastTime = performance.now();
+      rafId = requestAnimationFrame(loop);
+    }
   }
 
   document.addEventListener("keydown", onKeyDown);
+  document.addEventListener("visibilitychange", onVisibilityChange);
 
   initGame();
-  let rafId = requestAnimationFrame(loop);
 
   return {
     cleanup() {
       cancelAnimationFrame(rafId);
       document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     },
     setPaused(p: boolean) {
       paused = p;
