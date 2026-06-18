@@ -10,6 +10,7 @@ import {
   signOut,
   getProfile,
   createProfile,
+  PASSWORD_REGEX,
 } from "@/lib/supabase/auth";
 
 type PageState =
@@ -31,6 +32,43 @@ function mapError(msg: string): string {
     if (msg.includes(key)) return val;
   }
   return msg;
+}
+
+function PasswordStrength({ password }: { password: string }) {
+  const checks = [
+    { label: "Mínimo 8 caracteres", ok: password.length >= 8 },
+    { label: "Una mayúscula", ok: /[A-Z]/.test(password) },
+    { label: "Una minúscula", ok: /[a-z]/.test(password) },
+    { label: "Un número", ok: /\d/.test(password) },
+    { label: "Un símbolo", ok: /[^a-zA-Z\d]/.test(password) },
+  ];
+  const allOk = PASSWORD_REGEX.test(password);
+  return (
+    <div
+      style={{
+        marginTop: 6,
+        padding: "6px 10px",
+        background: allOk ? "rgba(0,255,0,0.04)" : "rgba(255,0,128,0.04)",
+        border: `1px solid ${allOk ? "var(--green)" : "rgba(255,0,128,0.3)"}`,
+        borderRadius: 4,
+      }}
+    >
+      {checks.map(({ label, ok }) => (
+        <div
+          key={label}
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.08em",
+            color: ok ? "var(--green)" : "var(--ink-faint)",
+            lineHeight: 1.7,
+          }}
+        >
+          {ok ? "✓" : "✗"} {label}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function AuthPage() {
@@ -337,6 +375,9 @@ export default function AuthPage() {
               placeholder="••••••••"
               autoComplete={tab === "in" ? "current-password" : "new-password"}
             />
+            {tab === "up" && password.length > 0 && (
+              <PasswordStrength password={password} />
+            )}
           </div>
 
           {error && (

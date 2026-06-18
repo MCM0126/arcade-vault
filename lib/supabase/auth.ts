@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/supabase/types";
 
+// lowercase + uppercase + digit + symbol, minimum 8 chars
+export const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
+
 export async function signIn(email: string, password: string) {
   const supabase = createClient();
   return supabase.auth.signInWithPassword({ email, password });
@@ -11,6 +15,15 @@ export async function signUp(
   password: string,
   username: string
 ) {
+  if (!PASSWORD_REGEX.test(password)) {
+    return {
+      data: { user: null, session: null },
+      error: {
+        message:
+          "La contraseña debe tener al menos 8 caracteres con mayúsculas, minúsculas, números y símbolos.",
+      },
+    } as const;
+  }
   const supabase = createClient();
   return supabase.auth.signUp({
     email,
