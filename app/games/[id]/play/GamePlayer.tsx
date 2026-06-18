@@ -18,9 +18,20 @@ interface Props {
 
 export default function GamePlayer({ game }: Props) {
   const router = useRouter();
-  const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(3);
-  const [level, setLevel] = useState(1);
+
+  // HUD values are kept in refs and written directly to the DOM to avoid
+  // triggering React re-renders on every game tick.
+  const scoreRef = useRef(0);
+  const livesRef = useRef(3);
+  const levelRef = useRef(1);
+  const scoreElRef = useRef<HTMLDivElement>(null);
+  const livesElRef = useRef<HTMLDivElement>(null);
+  const levelElRef = useRef<HTMLDivElement>(null);
+
+  // Captured once at game-over so the modal can show the final score even
+  // after scoreRef is reset by a subsequent restart().
+  const [finalScore, setFinalScore] = useState(0);
+
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -39,14 +50,31 @@ export default function GamePlayer({ game }: Props) {
 
   const callbacks = useMemo<GameCallbacks>(
     () => ({
-      onScore: (s) => setScore(s),
-      onLives: (l) => setLives(l),
-      onLevel: (lv) => setLevel(lv),
+      onScore: (s) => {
+        scoreRef.current = s;
+        if (scoreElRef.current)
+          scoreElRef.current.textContent = s.toLocaleString("es-ES");
+      },
+      onLives: (l) => {
+        livesRef.current = l;
+        if (livesElRef.current)
+          livesElRef.current.textContent =
+            game.id === "caida"
+              ? String(l)
+              : "♥ ".repeat(Math.max(0, l)).trim() || "—";
+      },
+      onLevel: (lv) => {
+        levelRef.current = lv;
+        if (levelElRef.current)
+          levelElRef.current.textContent = String(lv).padStart(2, "0");
+      },
       onGameOver: (s) => {
-        setScore(s);
+        setFinalScore(s);
         setOver(true);
       },
     }),
+    // scoreRef/livesRef/levelRef and their El counterparts are stable refs;
+    // game.id is a stable prop — safe to capture with empty deps.
     []
   );
 
@@ -54,32 +82,40 @@ export default function GamePlayer({ game }: Props) {
   const Canvas = GAME_CANVASES[game.id] ?? null;
 
   // CRT mock auto-score — only runs for games without a real engine.
+  // Level-up logic is fused into the same interval to avoid a reactive
+  // useEffect dependency on score state.
   useEffect(() => {
     if (Canvas || over || paused) return;
-    const t = setInterval(
-      () => setScore((s) => s + Math.floor(10 + Math.random() * 90)),
-      220
-    );
+    const t = setInterval(() => {
+      const next = scoreRef.current + Math.floor(10 + Math.random() * 90);
+      scoreRef.current = next;
+      if (scoreElRef.current)
+        scoreElRef.current.textContent = next.toLocaleString("es-ES");
+      if (next > 0 && next % 2500 < 100) {
+        const nextLevel = levelRef.current + 1;
+        levelRef.current = nextLevel;
+        if (levelElRef.current)
+          levelElRef.current.textContent = String(nextLevel).padStart(2, "0");
+      }
+    }, 220);
     return () => clearInterval(t);
   }, [Canvas, over, paused]);
 
-  useEffect(() => {
-    if (Canvas) return;
-    if (score > 0 && score % 2500 < 100) setLevel((l) => l + 1);
-  }, [Canvas, score]);
-
   const saveScore = async () => {
-    await saveScoreAction(game.id, name, score);
+    await saveScoreAction(game.id, name, finalScore);
     setSaved(true);
   };
 
   const restart = () => {
-    setScore(0);
-    setLives(3);
-    setLevel(1);
+    // Reset refs so they're coherent before the engine's restart() fires its
+    // own callbacks (which will also update the DOM via onScore/onLives/onLevel).
+    scoreRef.current = 0;
+    livesRef.current = 3;
+    levelRef.current = 1;
     setPaused(false);
     setOver(false);
     setSaved(false);
+    setFinalScore(0);
     astRef.current?.restart();
   };
 
@@ -103,19 +139,21 @@ export default function GamePlayer({ game }: Props) {
           </div>
           <div className="hud-stat">
             <div className="l">Puntuación</div>
-            <div className="v">{score.toLocaleString("es-ES")}</div>
+            <div className="v" ref={scoreElRef}>
+              0
+            </div>
           </div>
           <div className="hud-stat lives">
             <div className="l">{game.id === "caida" ? "Líneas" : "Vidas"}</div>
-            <div className="v">
-              {game.id === "caida"
-                ? lives
-                : "♥ ".repeat(Math.max(0, lives)).trim() || "—"}
+            <div className="v" ref={livesElRef}>
+              {game.id === "caida" ? "3" : "♥ ♥ ♥"}
             </div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>
-            <div className="v">{String(level).padStart(2, "0")}</div>
+            <div className="v" ref={levelElRef}>
+              01
+            </div>
           </div>
         </div>
         <div className="hud-actions">
@@ -195,7 +233,7 @@ export default function GamePlayer({ game }: Props) {
           <div className="modal">
             <h2>FIN DEL JUEGO</h2>
             <div className="final-label">PUNTUACIÓN FINAL</div>
-            <div className="final">{score.toLocaleString("es-ES")}</div>
+            <div className="final">{finalScore.toLocaleString("es-ES")}</div>
             {!saved ? (
               <div className="input-row">
                 <input
