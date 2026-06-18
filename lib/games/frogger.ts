@@ -212,37 +212,37 @@ function drawEntity(
 
   switch (e.type) {
     case "car": {
-      const colors = [palette["car-a"], palette["car-b"], palette["car-c"]];
-      ctx.fillStyle = colors[Math.floor(Math.abs(e.col) * 3) % 3];
+      const colorIdx = Math.floor(Math.abs(e.col) * 3) % 3;
+      ctx.fillStyle =
+        colorIdx === 0
+          ? palette["car-a"]
+          : colorIdx === 1
+            ? palette["car-b"]
+            : palette["car-c"];
       ctx.beginPath();
       ctx.roundRect(x + 2, y + 6, w - 4, CELL - 12, 6);
       ctx.fill();
-      // Wheels
       ctx.fillStyle = palette["car-wheel"];
-      [
-        [x + 6, y + CELL - 8],
-        [x + w - 10, y + CELL - 8],
-      ].forEach(([wx, wy]) => {
-        ctx.beginPath();
-        ctx.arc(wx, wy, 4, 0, Math.PI * 2);
-        ctx.fill();
-      });
+      ctx.beginPath();
+      ctx.arc(x + 6, y + CELL - 8, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + w - 10, y + CELL - 8, 4, 0, Math.PI * 2);
+      ctx.fill();
       break;
     }
     case "truck": {
       ctx.fillStyle = palette["truck-body"];
       ctx.fillRect(x + 2, y + 4, w - 4, CELL - 8);
       ctx.fillStyle = palette["truck-cab"];
-      ctx.fillRect(x + 2, y + 4, CELL - 2, CELL - 8); // cab
+      ctx.fillRect(x + 2, y + 4, CELL - 2, CELL - 8);
       ctx.fillStyle = palette["truck-wheel"];
-      [
-        [x + 8, y + CELL - 7],
-        [x + w - 12, y + CELL - 7],
-      ].forEach(([wx, wy]) => {
-        ctx.beginPath();
-        ctx.arc(wx, wy, 5, 0, Math.PI * 2);
-        ctx.fill();
-      });
+      ctx.beginPath();
+      ctx.arc(x + 8, y + CELL - 7, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + w - 12, y + CELL - 7, 5, 0, Math.PI * 2);
+      ctx.fill();
       break;
     }
     case "log": {
@@ -434,7 +434,7 @@ export function startFrogger(
   };
 
   let paused = false;
-   
+
   let running = true;
   let rafId = 0;
   let lastTs = 0;
@@ -694,6 +694,17 @@ export function startFrogger(
     rafId = requestAnimationFrame(loop);
   }
 
+  function onVisibilityChange() {
+    if (document.hidden) {
+      cancelAnimationFrame(rafId);
+    } else if (running && !paused) {
+      lastTs = 0;
+      rafId = requestAnimationFrame(loop);
+    }
+  }
+
+  document.addEventListener("visibilitychange", onVisibilityChange);
+
   rafId = requestAnimationFrame(loop);
   callbacks.onScore(0);
   callbacks.onLives(3);
@@ -703,6 +714,7 @@ export function startFrogger(
     cleanup() {
       cancelAnimationFrame(rafId);
       document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     },
     setPaused(p: boolean) {
       paused = p;
