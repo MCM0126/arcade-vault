@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Game } from "@/lib/types";
 import { GAME_CANVASES } from "@/lib/games/registry";
 import type { GameCallbacks, GameCanvasHandle } from "@/lib/games/types";
@@ -9,6 +10,8 @@ import type { SkinId } from "@/lib/games/skins";
 import { DEFAULT_SKIN } from "@/lib/games/skins";
 import SkinSelector from "./SkinSelector";
 import { saveScoreAction } from "./actions";
+import { getSession, getProfile } from "@/lib/supabase/auth";
+import type { Profile } from "@/lib/supabase/types";
 
 const SKIN_STORAGE_KEY = "arcade-vault:skin";
 
@@ -35,15 +38,22 @@ export default function GamePlayer({ game }: Props) {
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [name, setName] = useState("");
   const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   // Read persisted skin preference on first mount (client-only).
   useEffect(() => {
-    const saved = localStorage.getItem(SKIN_STORAGE_KEY) as SkinId | null;
-    if (saved === "classic" || saved === "neon" || saved === "retro") {
-      setSkin(saved);
+    const stored = localStorage.getItem(SKIN_STORAGE_KEY) as SkinId | null;
+    if (stored === "classic" || stored === "neon" || stored === "retro") {
+      setSkin(stored);
     }
+  }, []);
+
+  // Load session + profile on mount so we know whether the user can save scores.
+  useEffect(() => {
+    getSession().then((session) => {
+      if (session) getProfile(session.user.id).then(setProfile);
+    });
   }, []);
 
   const astRef = useRef<GameCanvasHandle | null>(null);
@@ -102,7 +112,8 @@ export default function GamePlayer({ game }: Props) {
   }, [Canvas, over, paused]);
 
   const saveScore = async () => {
-    await saveScoreAction(game.id, name, finalScore);
+    if (!profile) return;
+    await saveScoreAction(game.id, profile.username, finalScore);
     setSaved(true);
   };
 
@@ -120,8 +131,6 @@ export default function GamePlayer({ game }: Props) {
   };
 
   // Persist skin choice and hot-swap the palette in real time.
-  // The engine's setSkin mutates the shared palette object so colors change
-  // on the very next animation frame without restarting the game session.
   const handleSkinChange = (next: SkinId) => {
     setSkin(next);
     localStorage.setItem(SKIN_STORAGE_KEY, next);
@@ -134,7 +143,7 @@ export default function GamePlayer({ game }: Props) {
           <div className="hud-stat">
             <div className="l">Jugador</div>
             <div className="v" style={{ color: "var(--ink)" }}>
-              {name || "—"}
+              {profile ? profile.username.toUpperCase() : "INVITADO"}
             </div>
           </div>
           <div className="hud-stat">
@@ -234,27 +243,45 @@ export default function GamePlayer({ game }: Props) {
             <h2>FIN DEL JUEGO</h2>
             <div className="final-label">PUNTUACIÓN FINAL</div>
             <div className="final">{finalScore.toLocaleString("es-ES")}</div>
-            {!saved ? (
-              <div className="input-row">
-                <input
-                  value={name}
-                  onChange={(e) =>
-                    setName(e.target.value.toUpperCase().slice(0, 30))
-                  }
-                  placeholder="TU NOMBRE"
-                  maxLength={30}
-                />
-                <button
-                  className="btn yellow"
-                  onClick={saveScore}
-                  disabled={name.trim() === ""}
-                >
-                  GUARDAR PUNTUACIÓN
-                </button>
-              </div>
+
+            {profile ? (
+              // Authenticated — save directly with profile username
+              !saved ? (
+                <div className="input-row">
+                  <button className="btn yellow" onClick={saveScore}>
+                    GUARDAR PUNTUACIÓN
+                  </button>
+                </div>
+              ) : (
+                <div className="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+              )
             ) : (
-              <div className="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+              // Guest — prompt to register
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "12px 0",
+                  fontSize: 11,
+                  color: "var(--ink-dim)",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                <div className="mono" style={{ marginBottom: 10 }}>
+                  ¿QUIERES GUARDAR TU PUNTUACIÓN?
+                </div>
+                <div
+                  style={{ display: "flex", gap: 8, justifyContent: "center" }}
+                >
+                  <Link href="/auth" className="btn">
+                    CREAR CUENTA
+                  </Link>
+                  <Link href="/auth" className="btn ghost">
+                    INICIAR SESIÓN
+                  </Link>
+                </div>
+              </div>
             )}
+
             <div className="actions">
               <button className="btn" onClick={restart}>
                 JUGAR DE NUEVO

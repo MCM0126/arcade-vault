@@ -1,5 +1,6 @@
 "use server";
 
+import { createClient } from "@/lib/supabase/server";
 import { insertScore } from "@/lib/supabase/scores";
 
 export async function saveScoreAction(
@@ -7,5 +8,10 @@ export async function saveScoreAction(
   playerName: string,
   score: number
 ): Promise<void> {
-  await insertScore(gameId, playerName, score);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  await insertScore(gameId, playerName, score, user.id);
 }
