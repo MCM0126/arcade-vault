@@ -34,6 +34,7 @@ Project-local agents live in `.claude/agents/`:
 - **`skin-designer`** — diseña e implementa los 3 skins (neon, retro, classic) para un juego. Ver `.claude/agents/skin-designer.md`.
 - **`mobile-porter`** — audita y corrige el layout móvil y los controles táctiles. Ver `.claude/agents/mobile-porter.md`.
 - **`game-performance-booster`** — optimiza el performance de un juego (React layer + game loop). Ver `.claude/agents/game-performance-booster.md`.
+- **`audit-code`** — audita la seguridad de la BD (RLS, search_path, permisos SECURITY DEFINER) y la app Next.js (headers HTTP, validación de contraseña, protección de rutas). Ver `.claude/agents/audit-code.md`.
 
 ## Architecture
 
